@@ -35,7 +35,15 @@ library BootstrapLib {
     /// @param module The address of the module.
     /// @param data The initialization data for the module.
     /// @return config An array containing a single BootstrapPreValidationHookConfig structure.
-    function createArrayPreValidationHookConfig(uint256 hookType, address module, bytes memory data) internal pure returns (BootstrapPreValidationHookConfig[] memory config) {
+    function createArrayPreValidationHookConfig(
+        uint256 hookType,
+        address module,
+        bytes memory data
+    )
+        internal
+        pure
+        returns (BootstrapPreValidationHookConfig[] memory config)
+    {
         config = new BootstrapPreValidationHookConfig[](1);
         config[0].hookType = hookType;
         config[0].module = module;
@@ -45,6 +53,7 @@ library BootstrapLib {
     /// @param modules An array of module addresses.
     /// @param datas An array of initialization data for each module.
     /// @return configs An array of BootstrapConfig structures.
+
     function createMultipleConfigs(address[] memory modules, bytes[] memory datas) internal pure returns (BootstrapConfig[] memory configs) {
         require(modules.length == datas.length, "BootstrapLib: length mismatch");
         configs = new BootstrapConfig[](modules.length);

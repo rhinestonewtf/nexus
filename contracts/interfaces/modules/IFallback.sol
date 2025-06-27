@@ -24,5 +24,5 @@ import { IModule } from "./IModule.sol";
 /// @author @zeroknots | Rhinestone.wtf | zeroknots.eth
 /// Special thanks to the Solady team for foundational contributions: https://github.com/Vectorized/solady
 interface IFallback is IModule {
-    // Future methods for fallback management will be defined here to accommodate evolving blockchain technologies.
+// Future methods for fallback management will be defined here to accommodate evolving blockchain technologies.
 }

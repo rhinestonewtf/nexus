@@ -24,5 +24,5 @@ import { IModule } from "./IModule.sol";
 /// @author @zeroknots | Rhinestone.wtf | zeroknots.eth
 /// Special thanks to the Solady team for foundational contributions: https://github.com/Vectorized/solady
 interface IExecutor is IModule {
-    // Future methods for execution management will be defined here to accommodate evolving requirements.
+// Future methods for execution management will be defined here to accommodate evolving requirements.
 }
