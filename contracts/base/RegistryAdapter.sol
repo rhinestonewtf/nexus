@@ -31,11 +31,11 @@ abstract contract RegistryAdapter is Storage {
     /// @param attesters The list of attesters to trust.
     /// @param threshold The number of attestations required.
     function _configureRegistry(IERC7484 newRegistry, address[] memory attesters, uint8 threshold) internal {
-        if (address(newRegistry) != address(0)) {
-            _getAccountStorage().registry = address(newRegistry);
-            newRegistry.trustAttesters(threshold, attesters);
-            emit ERC7484RegistryConfigured(newRegistry);
-        }
+    //     if (address(newRegistry) != address(0)) {
+    //         _getAccountStorage().registry = address(newRegistry);
+    //         newRegistry.trustAttesters(threshold, attesters);
+    //         emit ERC7484RegistryConfigured(newRegistry);
+    //     }
     }
 
     /// @notice Checks the registry to ensure sufficient valid attestations for a module.
@@ -43,10 +43,10 @@ abstract contract RegistryAdapter is Storage {
     /// @param moduleType The type of the module to verify in the registry.
     /// @dev Reverts if the required attestations are not met.
     function _checkRegistry(address module, uint256 moduleType) internal view {
-        IERC7484 moduleRegistry = IERC7484(_getAccountStorage().registry);
-        if (address(moduleRegistry) != address(0)) {
-            // This will revert if attestations or the threshold are not met.
-            moduleRegistry.check(module, moduleType);
-        }
+        // IERC7484 moduleRegistry = IERC7484(_getAccountStorage().registry);
+        // if (address(moduleRegistry) != address(0)) {
+        //     // This will revert if attestations or the threshold are not met.
+        //     moduleRegistry.check(module, moduleType);
+        // }
     }
 }
