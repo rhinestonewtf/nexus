@@ -31,11 +31,11 @@ abstract contract RegistryAdapter is Storage {
     /// @param attesters The list of attesters to trust.
     /// @param threshold The number of attestations required.
     function _configureRegistry(IERC7484 newRegistry, address[] memory attesters, uint8 threshold) internal {
-    //     if (address(newRegistry) != address(0)) {
-    //         _getAccountStorage().registry = address(newRegistry);
-    //         newRegistry.trustAttesters(threshold, attesters);
-    //         emit ERC7484RegistryConfigured(newRegistry);
-    //     }
+        //     if (address(newRegistry) != address(0)) {
+        //         _getAccountStorage().registry = address(newRegistry);
+        //         newRegistry.trustAttesters(threshold, attesters);
+        //         emit ERC7484RegistryConfigured(newRegistry);
+        //     }
     }
 
     /// @notice Checks the registry to ensure sufficient valid attestations for a module.
