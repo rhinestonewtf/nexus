@@ -64,11 +64,22 @@ api_key="${ETHERSCAN_API_KEY}"
 file = "./artifacts/Nexus/Nexus.json"
 source_file="./artifacts/Nexus/verify.json"
 salt = "0x0000000000000000000000000000000000000000d21f121ea506a800a7422403"
+args_sig = "(address,address,bytes)"
+args = [
+"0x0000000071727De22E5E9d8BAf0edAc6f37da032", # entryPoint 
+"0x2483DA3A338895199E5e538530213157e931Bf06", # default validator
+"0x" # initData
+]
 
 [deployments.singleton.NexusBootstrap]
 file = "./artifacts/NexusBootstrap/NexusBootstrap.json"
 source_file="./artifacts/NexusBootstrap/verify.json"
 salt = "0x0000000000000000000000000000000000000000d21f121ea506a800a7422403"
+args_sig = "(address,bytes)"
+args = [
+"0x2483DA3A338895199E5e538530213157e931Bf06", # default validator
+"0x" # initData
+]
 
 [deployments.singleton.NexusAccountFactory]
 file = "./artifacts/NexusBootstrap/NexusBootstrap.json"
