@@ -65,6 +65,7 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
     using ExecLib for bytes;
     using NonceLib for uint256;
     using SentinelListLib for SentinelListLib.SentinelList;
+    using ECDSA for bytes;
 
     /// @dev The timelock period for emergency hook uninstallation.
     uint256 internal constant _EMERGENCY_TIMELOCK = 1 days;
@@ -316,7 +317,7 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
                 // Remove the signature  from the initData
                 initData = initData[65:];
                 // Calculate the hash of the initData
-                bytes32 initDataHash = keccak256(initData);
+                bytes32 initDataHash = initData.toEthSignedMessageHash();
                 // Make sure the initHash is not already used
                 require(!$accountStorage.erc7702InitHashes[initDataHash], AccountAlreadyInitialized());
                 // Check if the signature is valid

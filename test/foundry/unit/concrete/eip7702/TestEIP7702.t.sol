@@ -12,6 +12,7 @@ import { MockTransferer } from "contracts/mocks/MockTransferer.sol";
 
 contract TestEIP7702 is NexusTest_Base {
     using ECDSA for bytes32;
+    using ECDSA for bytes;
 
     MockDelegateTarget delegateTarget;
     MockTarget target;
@@ -279,7 +280,7 @@ contract TestEIP7702 is NexusTest_Base {
         bytes memory actualInitData = _getInitData();
 
         // Calculate the hash that needs to be signed
-        bytes32 initDataHash = keccak256(actualInitData);
+        bytes32 initDataHash = actualInitData.toEthSignedMessageHash();
 
         // Sign the hash with the EOA's private key
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, initDataHash);
@@ -310,7 +311,7 @@ contract TestEIP7702 is NexusTest_Base {
         bytes memory actualInitData = _getInitData();
 
         // Sign the initialization
-        bytes32 initDataHash = keccak256(actualInitData);
+        bytes32 initDataHash = actualInitData.toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, initDataHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
@@ -341,7 +342,7 @@ contract TestEIP7702 is NexusTest_Base {
 
         // Sign with a different key (wrong signature)
         uint256 wrongKey = uint256(999);
-        bytes32 initDataHash = keccak256(actualInitData);
+        bytes32 initDataHash = actualInitData.toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongKey, initDataHash);
         bytes memory signature = abi.encodePacked(r, s, v);
 
