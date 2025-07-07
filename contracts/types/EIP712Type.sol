@@ -11,23 +11,24 @@ library EIP712Types {
 
     struct ChainExecutions {
         uint256 chainId;
+        uint256 nonce;
         Execution[] executions;
     }
 }
 
 library EIP712Hash {
     using EfficientHashLib for bytes32[];
-    // EIP712 TYPEHASH constants
-    // Execution(address target,uint256 value,bytes callData)
 
+    // EIP712 TYPEHASH constants
+    // ChainExecutions(uint256 chainId,uint256 nonce,Execution[] executions)Execution(address target,uint256 value,bytes callData)
+    bytes32 internal constant CHAINEXECUTIONS_TYPEHASH = 0x202030f3d0c10e3a7e7fa09313576a83d2539bc3f2bc9a639fc1d2a22a837abe;
+
+    // Execution(address target,uint256 value,bytes callData)
     bytes32 internal constant EXECUTION_TYPEHASH = 0x37fb04e5593580b36bfacc47d8b1a4b9a2acb88a513bf153760f925a6723d4b5;
 
-    // MultiChainExecutions(ChainExecutions[] multiChainExecutions)ChainExecutions(uint256 chainId,Execution[] executions)Execution(address target,uint256
-    // value,bytes callData)
-    bytes32 internal constant MULTICHAINEXECUTIONS_TYPEHASH = 0x39c2b030abe9123e82a27029aa3ca724fa9db47449be8b1a9e37ee52d338a89d;
-
-    // ChainExecutions(uint256 chainId,Execution[] executions)Execution(address target,uint256 value,bytes callData)
-    bytes32 internal constant CHAINEXECUTIONS_TYPEHASH = 0x604489d065f51dde183686730d241312b920624df0d384d3b095f1e9a472cbd1;
+    // MultiChainExecutions(ChainExecutions[] multiChainExecutions)ChainExecutions(uint256 chainId,uint256 nonce,Execution[] executions)Execution(address
+    // target,uint256 value,bytes callData)
+    bytes32 internal constant MULTICHAINEXECUTIONS_TYPEHASH = 0xae6c965accf9121eb189e9cce285333fc4477dbf367cbfab682677cf87bf7595;
 
     function hashExecution(address target, uint256 value, bytes calldata callData) internal pure returns (bytes32) {
         return keccak256(abi.encode(EXECUTION_TYPEHASH, target, value, keccak256(callData)));
@@ -52,12 +53,12 @@ library EIP712Hash {
         bytes32[] memory a = EfficientHashLib.malloc(length);
         for (uint256 i; i < length; i++) {
             EIP712Types.ChainExecutions calldata chainExecution = chainExecutions[i];
-            a.set(i, hashChainExecutions(chainExecution.chainId, hashExecutions(chainExecution.executions)));
+            a.set(i, hashChainExecutions(chainExecution.chainId, chainExecution.nonce, hashExecutions(chainExecution.executions)));
         }
         return hashMultiChainExecutions(a.hash());
     }
 
-    function hashChainExecutions(uint256 chainId, bytes32 executionsHash) internal pure returns (bytes32) {
-        return keccak256(abi.encode(CHAINEXECUTIONS_TYPEHASH, chainId, executionsHash));
+    function hashChainExecutions(uint256 chainId, uint256 nonce, bytes32 executionsHash) internal pure returns (bytes32) {
+        return keccak256(abi.encode(CHAINEXECUTIONS_TYPEHASH, chainId, nonce, executionsHash));
     }
 }

@@ -576,12 +576,26 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
         version = "1.2.0";
     }
 
-    function executeWithSig(Execution[] calldata executions, bytes32[] calldata allChains, uint256 chainIdPtr, bytes calldata signature) external {
-        bytes32 hash = EIP712Hash.hashChainExecutions(block.chainid, EIP712Hash.hashExecutions(executions));
+    function executeWithSig(
+        Execution[] calldata executions,
+        bytes32[] calldata allChains,
+        uint256 chainIdPtr,
+        uint256 nonce,
+        bytes calldata signature
+    )
+        external
+    {
+        // Check if nonce is valid
+        require(!_getAccountStorage().nonces[nonce], InvalidNonce());
+        // Mark nonce as used
+        _getAccountStorage().nonces[nonce] = true;
 
-        // we ensure that the ChainExecutions hash is in the allChains array.
+        // calculate the hash for this chain + executions
+        bytes32 hash = EIP712Hash.hashChainExecutions(block.chainid, nonce, EIP712Hash.hashExecutions(executions));
+
+        //  ensure that the ChainExecutions hash is in the allChains array.
         if (allChains[chainIdPtr] != hash) revert InvalidMultiChainHash();
-        // now we create MultiChainExecutions hash
+        // hash all chains together
         hash = EIP712Hash.hashMultiChainExecutions(keccak256(abi.encodePacked(allChains)));
         bytes32 digest = _hashTypedDataSansChainId(hash);
 
