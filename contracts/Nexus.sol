@@ -44,6 +44,7 @@ import {
     EXECTYPE_DEFAULT,
     EXECTYPE_TRY
 } from "./lib/ModeLib.sol";
+import { EIP712Hash } from "../types/EIP712Types.sol";
 import { NonceLib } from "./lib/NonceLib.sol";
 import { SentinelListLib, SENTINEL, ZERO_ADDRESS } from "sentinellist/SentinelList.sol";
 import { Initializable } from "./lib/Initializable.sol";
@@ -572,5 +573,24 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
     function _domainNameAndVersion() internal pure override returns (string memory name, string memory version) {
         name = "Nexus";
         version = "1.2.0";
+    }
+
+    function execute(ChainExecutions calldata chainExecutions, bytes32[] calldata allChains, uint256 chainIdPtr, bytes calldata signature) external {
+        bytes32 hash = EIP712Hash.hashChainExecutions(chainExecutions.chainId, EIP712Hash.hashExecutions(chainExecutions.executions));
+
+        // we ensure that the ChainExecutions hash is in the allChains array.
+        require(allChains[chainIdPtr] == hash, "Invalid MultiChainHash");
+        // now we create MultiChainExecutions hash
+        hash = EIP712Hash.hashMultiChainExecutions(keccak256(abi.encodePacked(allChains)));
+        bytes32 digest = _hashTypedDataSansChainId(hash);
+
+        address validator = _handleValidator(address(bytes20(signature[0:20])));
+        bytes memory signature_;
+        (hash, signature_) = _withPreValidationHook(hash, signature[20:]);
+        try IValidator(validator).isValidSignatureWithSender(msg.sender, hash, signature_) returns (bytes4 res) {
+            return res;
+        } catch {
+            return bytes4(0xffffffff);
+        }
     }
 }
