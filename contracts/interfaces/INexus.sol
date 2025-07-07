@@ -15,6 +15,7 @@ pragma solidity ^0.8.27;
 import { IERC4337Account } from "./IERC4337Account.sol";
 import { IERC7579Account } from "./IERC7579Account.sol";
 import { INexusEventsAndErrors } from "./INexusEventsAndErrors.sol";
+import { Execution } from "../types/DataTypes.sol";
 
 /// @title Nexus - INexus Interface
 /// @notice Integrates ERC-4337 and ERC-7579 standards to manage smart accounts within the Nexus suite.
@@ -33,4 +34,37 @@ interface INexus is IERC4337Account, IERC7579Account, INexusEventsAndErrors {
     /// Can be called directly or via a factory.
     /// @param initData Encoded data used for the account's configuration during initialization.
     function initializeAccount(bytes calldata initData) external payable;
+
+    /// @notice Executes a batch of transactions using signature-based authorization for multi-chain execution
+    /// @dev Enables secure cross-chain transaction execution with replay protection and signature validation.
+    ///      Supports multi-chain execution scenarios where the same signature can authorize executions across
+    ///      multiple chains, but each chain only executes its designated subset of transactions.
+    /// @param executions Array of transactions to execute on the current chain
+    /// @param allChains Array of hashes representing all chain executions in the multi-chain transaction
+    /// @param chainIdPtr Index in the allChains array corresponding to the current chain's execution hash
+    /// @param nonce Unique number to prevent replay attacks (must not have been used previously)
+    /// @param signature EIP-712 signature authorizing the execution (format: [validatorAddress][signature_data])
+    function executeMultiChainWithSig(
+        Execution[] calldata executions,
+        bytes32[] calldata allChains,
+        uint256 chainIdPtr,
+        uint256 nonce,
+        bytes calldata signature
+    )
+        external
+        returns (bytes[] memory results);
+
+    /// @notice Executes a batch of transactions using signature-based authorization for single-chain execution
+    /// @dev Simplified version for single-chain execution with replay protection and signature validation.
+    ///      This is more gas-efficient than the multi-chain version when only executing on one chain.
+    /// @param executions Array of transactions to execute on the current chain
+    /// @param nonce Unique number to prevent replay attacks (must not have been used previously)
+    /// @param signature EIP-712 signature authorizing the execution (format: [validatorAddress][signature_data])
+    function executeWithSig(
+        Execution[] calldata executions,
+        uint256 nonce,
+        bytes calldata signature
+    )
+        external
+        returns (bytes[] memory results);
 }

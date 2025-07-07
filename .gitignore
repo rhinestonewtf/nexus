@@ -1,4 +1,5 @@
 # directories
+.claude
 cache
 cache_forge
 coverage

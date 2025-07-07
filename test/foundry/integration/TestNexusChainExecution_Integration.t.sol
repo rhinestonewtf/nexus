@@ -10,8 +10,8 @@ import { IModuleManagerEventsAndErrors } from "../../../contracts/interfaces/bas
 import { MockSimpleValidator } from "../../../../../contracts/mocks/MockSimpleValidator.sol";
 
 /// @title TestNexusChainExecution_Integration
-/// @notice Integration tests for Nexus smart account's executeWithSig function
-/// @dev Note: Current implementation validates signatures and executes transactions
+/// @notice Integration tests for Nexus smart account's executeMultiChainWithSig function
+/// @dev Note: Current implementation validates signatures and executes multi-chain transactions
 contract TestNexusChainExecution_Integration is NexusTest_Base {
     using EIP712Hash for Execution[];
     using EIP712Hash for bytes32;
@@ -76,9 +76,9 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
         // Record balance before execution
         uint256 balanceBefore = address(target).balance;
 
-        // Call executeWithSig (validates signature and executes)
+        // Call executeMultiChainWithSig (validates signature and executes)
         vm.prank(user.addr);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
 
         // Verify execution occurred
         assertEq(address(target).balance, balanceBefore + 1 ether, "Target should have received 1 ether");
@@ -114,9 +114,9 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
         uint256 balance2Before = address(target2).balance;
         uint256 balance3Before = address(target3).balance;
 
-        // Call executeWithSig (validates signature and executes)
+        // Call executeMultiChainWithSig (validates signature and executes)
         vm.prank(user.addr);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
 
         // Verify executions occurred
         assertEq(address(target).balance, balance1Before + 0.5 ether, "Target 1 should have received 0.5 ether");
@@ -156,9 +156,9 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
         // Record balance before execution
         uint256 balanceBefore = address(target).balance;
 
-        // Call executeWithSig (validates signature and executes)
+        // Call executeMultiChainWithSig (validates signature and executes)
         vm.prank(user.addr);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
 
         // Verify only current chain execution happened
         assertEq(address(target).balance, balanceBefore + 1 ether, "Target should have received 1 ether");
@@ -184,7 +184,7 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
         // Try to execute with wrong chain ID pointer (1 instead of 0) which points to wrong hash
         vm.prank(user.addr);
         vm.expectRevert(INexusEventsAndErrors.InvalidMultiChainHash.selector);
-        nexusAccount.executeWithSig(executions, allChains, 1, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 1, nonce, signature);
     }
 
     /// @notice Test validation with mismatched chain execution data should revert
@@ -215,7 +215,7 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
         // Should revert due to hash mismatch
         vm.prank(user.addr);
         vm.expectRevert(INexusEventsAndErrors.InvalidMultiChainHash.selector);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
     }
 
     /// @notice Test validation with invalid signature should revert
@@ -237,7 +237,7 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
         // Should revert due to invalid signature
         vm.prank(user.addr);
         vm.expectRevert(INexusEventsAndErrors.InvalidSignature.selector);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
     }
 
     /// @notice Test execution from any caller (signature-based auth)
@@ -260,7 +260,7 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
 
         // Anyone should be able to submit the transaction as it's validated by signature
         vm.prank(ALICE.addr);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
 
         // Verify execution occurred
         assertEq(address(target).balance, balanceBefore + 1 ether, "Target should have received 1 ether");
@@ -284,7 +284,7 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
         // Measure gas
         uint256 gasBefore = gasleft();
         vm.prank(user.addr);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
         uint256 gasUsed = gasBefore - gasleft();
 
         console2.log("Gas used for chain execution:", gasUsed);
@@ -312,7 +312,7 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
 
         // Execute transactions with signature validation
         vm.prank(user.addr);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
 
         // Verify both operations executed correctly
         assertEq(address(target).balance, balanceBefore + 1 ether, "Target should receive 1 ether");
@@ -335,12 +335,12 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
 
         // Execute transaction
         vm.prank(user.addr);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
 
         // Try to reuse the same nonce - should revert with InvalidNonce
         vm.prank(user.addr);
         vm.expectRevert(IModuleManagerEventsAndErrors.InvalidNonce.selector);
-        nexusAccount.executeWithSig(executions, allChains, 0, nonce, signature);
+        nexusAccount.executeMultiChainWithSig(executions, allChains, 0, nonce, signature);
     }
 
     /// @notice Test that using an already used nonce fails immediately
@@ -359,7 +359,7 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
 
         // Execute first transaction with nonce 456
         vm.prank(user.addr);
-        nexusAccount.executeWithSig(executions1, allChains1, 0, nonce, signature1);
+        nexusAccount.executeMultiChainWithSig(executions1, allChains1, 0, nonce, signature1);
 
         // Prepare second execution with the same nonce
         Execution[] memory executions2 = new Execution[](1);
@@ -375,7 +375,7 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
         // Try to execute second transaction with same nonce - should revert with InvalidNonce
         vm.prank(user.addr);
         vm.expectRevert(IModuleManagerEventsAndErrors.InvalidNonce.selector);
-        nexusAccount.executeWithSig(executions2, allChains2, 0, nonce, signature2);
+        nexusAccount.executeMultiChainWithSig(executions2, allChains2, 0, nonce, signature2);
     }
 
     /// @notice Test that different nonces work independently
@@ -408,10 +408,10 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
 
         // Execute both transactions with different nonces - both should succeed
         vm.prank(user.addr);
-        nexusAccount.executeWithSig(executions1, allChains1, 0, nonce1, signature1);
+        nexusAccount.executeMultiChainWithSig(executions1, allChains1, 0, nonce1, signature1);
 
         vm.prank(user.addr);
-        nexusAccount.executeWithSig(executions2, allChains2, 0, nonce2, signature2);
+        nexusAccount.executeMultiChainWithSig(executions2, allChains2, 0, nonce2, signature2);
 
         // Verify both executions occurred
         assertEq(address(target).balance, balanceBefore + 0.8 ether, "Target should have received 0.8 ether total");
@@ -419,12 +419,12 @@ contract TestNexusChainExecution_Integration is NexusTest_Base {
         // Now try to reuse nonce1 - should fail
         vm.prank(user.addr);
         vm.expectRevert(IModuleManagerEventsAndErrors.InvalidNonce.selector);
-        nexusAccount.executeWithSig(executions1, allChains1, 0, nonce1, signature1);
+        nexusAccount.executeMultiChainWithSig(executions1, allChains1, 0, nonce1, signature1);
 
         // And try to reuse nonce2 - should also fail
         vm.prank(user.addr);
         vm.expectRevert(IModuleManagerEventsAndErrors.InvalidNonce.selector);
-        nexusAccount.executeWithSig(executions2, allChains2, 0, nonce2, signature2);
+        nexusAccount.executeMultiChainWithSig(executions2, allChains2, 0, nonce2, signature2);
     }
 
     /// @notice Helper function to demonstrate how the execute function should iterate through executions

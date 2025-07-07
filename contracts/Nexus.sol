@@ -576,7 +576,87 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
         version = "1.2.0";
     }
 
-    function executeWithSig(
+    /**
+     * @notice Executes a batch of transactions using signature-based authorization for multi-chain execution
+     * @dev This function enables secure cross-chain transaction execution with replay protection and signature validation.
+     *      It supports multi-chain execution scenarios where the same signature can authorize executions across
+     *      multiple chains, but each chain only executes its designated subset of transactions.
+     *
+     * @dev Security Features:
+     *      - Nonce-based replay protection: Each nonce can only be used once per account
+     *      - EIP-712 structured data signing for signature safety and wallets compatibility
+     *      - Multi-chain hash validation to ensure execution integrity across chains
+     *      - Validator module integration for flexible signature verification schemes
+     *      - Pre-validation hooks for additional security checks
+     *
+     * @dev Multi-Chain Execution Flow:
+     *      1. User signs a single EIP-712 message containing all chain executions
+     *      2. The signature authorizes specific executions on specific chains
+     *      3. Each chain validates the signature and executes only its designated transactions
+     *      4. Nonce invalidation prevents replay attacks within each chain
+     *
+     * @param executions Array of transactions to execute on the current chain. Each execution contains:
+     *                   - target: Contract address to call
+     *                   - value: ETH amount to send (in wei)
+     *                   - callData: Encoded function call data
+     * @param allChains Array of hashes representing all chain executions in the multi-chain transaction.
+     *                  Each element is a hash of ChainExecutions(chainId, nonce, executionsHash) for a specific chain.
+     *                  This array must include the hash for the current chain at the specified chainIdPtr index.
+     * @param chainIdPtr Index in the allChains array that corresponds to the current chain's execution hash.
+     *                   This is used to locate and validate the current chain's execution data within the
+     *                   multi-chain transaction set.
+     * @param nonce Unique number to prevent replay attacks. Each nonce can only be used once per account.
+     *              Must not have been used previously for this account.
+     * @param signature EIP-712 signature authorizing the execution. Format: [validatorAddress(20 bytes)][signature_data]
+     *                  The first 20 bytes specify which validator module should verify the signature.
+     *                  The remaining bytes contain the actual signature data specific to that validator.
+     *
+     * @dev Signature Verification Process:
+     *      1. Extract validator address from first 20 bytes of signature
+     *      2. Create EIP-712 hash of the multi-chain execution data
+     *      3. Apply any pre-validation hooks for additional security checks
+     *      4. Delegate signature verification to the specified validator module
+     *      5. Validator returns ERC-1271 magic value (0x1626ba7e) for valid signatures
+     *
+     * @dev Execution Validation:
+     *      - Nonce must not have been used before (prevents replay attacks)
+     *      - Current chain's execution hash must match the hash at allChains[chainIdPtr]
+     *      - Signature must be valid according to the specified validator module
+     *      - All transactions in executions array will be executed in order
+     *
+     * @dev Gas Considerations:
+     *      - Function can be called by anyone (signature provides authorization)
+     *      - Failed transactions will cause the entire call to revert
+     *      - Gas cost scales with number of executions and complexity of signature validation
+     *
+     * @dev Events: Individual transaction executions may emit events from target contracts
+     *
+     * @custom:security-note This function is critical for account security. The signature validation
+     *                       and nonce management prevent unauthorized access and replay attacks.
+     *                       Any modifications should be thoroughly audited.
+     *
+     * @custom:example
+     * ```solidity
+     * // Example: Execute a simple ETH transfer on current chain as part of multi-chain transaction
+     * Execution[] memory executions = new Execution[](1);
+     * executions[0] = Execution({
+     *     target: recipient,
+     *     value: 1 ether,
+     *     callData: ""
+     * });
+     *
+     * bytes32[] memory allChains = new bytes32[](1);
+     * allChains[0] = hashChainExecutions(block.chainid, nonce, hashExecutions(executions));
+     *
+     * bytes memory signature = abi.encodePacked(validatorAddress, signatureData);
+     * account.executeWithSig(executions, allChains, 0, nonce, signature);
+     * ```
+     *
+     * @custom:reverts InvalidNonce If the nonce has already been used
+     * @custom:reverts InvalidMultiChainHash If the execution hash doesn't match allChains[chainIdPtr]
+     * @custom:reverts InvalidSignature If the signature verification fails
+     */
+    function executeMultiChainWithSig(
         Execution[] calldata executions,
         bytes32[] calldata allChains,
         uint256 chainIdPtr,
@@ -584,27 +664,211 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
         bytes calldata signature
     )
         external
+        returns (bytes[] memory results)
     {
-        // Check if nonce is valid
+        // SECURITY: Nonce validation - Critical for preventing replay attacks
+        // Each nonce can only be used once per account to ensure transaction uniqueness
+        // This prevents malicious actors from re-executing the same transaction multiple times
         require(!_getAccountStorage().nonces[nonce], InvalidNonce());
-        // Mark nonce as used
+
+        // SECURITY: Nonce invalidation - Mark nonce as used immediately after validation
+        // This prevents any potential race conditions or reentrancy attacks that could
+        // allow the same nonce to be used twice within the same transaction
         _getAccountStorage().nonces[nonce] = true;
 
-        // calculate the hash for this chain + executions
+        // SECURITY: Current chain execution hash calculation
+        // This creates a unique hash representing the executions intended for this specific chain
+        // The hash includes: chainId (prevents cross-chain replay), nonce (prevents replay),
+        // and execution data (ensures data integrity)
         bytes32 hash = EIP712Hash.hashChainExecutions(block.chainid, nonce, EIP712Hash.hashExecutions(executions));
 
-        //  ensure that the ChainExecutions hash is in the allChains array.
+        // SECURITY: Multi-chain hash validation - Critical integrity check
+        // Ensure that the execution data for this chain matches what was signed in the multi-chain transaction
+        // This prevents attackers from substituting different execution data for the current chain
+        // The chainIdPtr must point to the correct hash in allChains array for this chain
         if (allChains[chainIdPtr] != hash) revert InvalidMultiChainHash();
-        // hash all chains together
+
+        // SECURITY: Multi-chain execution hash creation
+        // Create the final hash that represents all chains in this multi-chain transaction
+        // This is what was actually signed by the user, ensuring they authorized the complete
+        // multi-chain transaction set, not just individual chain executions
         hash = EIP712Hash.hashMultiChainExecutions(keccak256(abi.encodePacked(allChains)));
+
+        // SECURITY: EIP-712 structured data hash creation
+        // Generate the final digest that will be verified against the signature
+        // This ensures the signature was created for this specific contract (domain separation)
+        // and follows EIP-712 standard for structured data signing
         bytes32 digest = _hashTypedDataSansChainId(hash);
 
+        // SECURITY: Validator extraction from signature
+        // First 20 bytes of signature specify which validator module should verify the signature
+        // This allows flexible signature schemes while maintaining security
+        // The validator address is trusted to properly verify the signature format it expects
         address validator = _handleValidator(address(bytes20(signature[0:20])));
+
+        // SECURITY: Pre-validation hook processing
+        // Apply any additional security checks configured for this account
+        // Hooks can modify the hash or signature, or add extra validation logic
+        // This provides extensible security mechanisms beyond basic signature verification
         bytes memory signature_;
         (hash, signature_) = _withPreValidationHook(hash, signature[20:]);
+
+        // SECURITY: Signature verification - The core authorization check
+        // Delegate to the specified validator module to verify the signature
+        // The validator must return ERC1271_MAGICVALUE (0x1626ba7e) for valid signatures
+        // This follows ERC-1271 standard for contract signature verification
         bytes4 validSig = IValidator(validator).isValidSignatureWithSender(msg.sender, digest, signature_);
         if (validSig != ERC1271_MAGICVALUE) revert InvalidSignature();
 
-        _executeBatch(executions);
+        // SECURITY: Execution phase - Only reached after all security checks pass
+        // Execute all transactions in the executions array in the specified order
+        // If any execution fails, the entire transaction reverts, maintaining atomicity
+        // This ensures either all operations succeed or none do, preventing partial state changes
+        results = _executeBatch(executions);
+    }
+
+    /**
+     * @notice Executes a batch of transactions using signature-based authorization for single-chain operations
+     * @dev This function provides a streamlined execution path for transactions that only need to run on a single blockchain.
+     *      It offers gas-optimized execution compared to the multi-chain variant while maintaining the same security guarantees
+     *      for signature verification and transaction atomicity.
+     *
+     * @dev SECURITY FEATURES:
+     *      • EIP-712 structured data signing prevents signature confusion and replay attacks
+     *      • Nonce-based replay protection ensures each signature can only be used once
+     *      • Validator-based signature verification supports multiple cryptographic schemes (ECDSA, multi-sig, etc.)
+     *      • Pre-validation hooks enable additional security layers and custom validation logic
+     *      • Atomic transaction execution ensures all-or-nothing behavior across the batch
+     *      • Chain ID inclusion in hash prevents cross-chain signature reuse
+     *
+     * @dev EXECUTION FLOW:
+     *      1. Nonce Validation: Verifies the nonce hasn't been used before (prevents replay attacks)
+     *      2. Nonce Invalidation: Marks the nonce as used to prevent future reuse
+     *      3. Hash Generation: Creates EIP-712 compliant hash from chain ID, nonce, and execution data
+     *      4. Domain Separation: Applies account-specific domain separator without chain ID
+     *      5. Validator Extraction: Extracts validator address from first 20 bytes of signature
+     *      6. Hook Processing: Applies pre-validation hooks for additional security checks
+     *      7. Signature Verification: Validates signature using specified validator module
+     *      8. Batch Execution: Executes all transactions atomically in specified order
+     *
+     * @dev GAS OPTIMIZATION:
+     *      • Single-chain focused design reduces computational overhead vs multi-chain variant
+     *      • Direct execution without multi-chain validation logic
+     *      • Efficient batch processing with minimal memory allocation
+     *      • Optimized hash computation using EfficientHashLib for large batches
+     *
+     * @dev SECURITY CONSIDERATIONS:
+     *      • Nonce validation prevents replay attacks - each nonce can only be used once
+     *      • Signatures are tied to specific chain ID, preventing cross-chain replay
+     *      • Validator modules must implement proper signature verification logic
+     *      • Pre-validation hooks can add custom security requirements
+     *      • All executions are atomic - failure of any transaction reverts the entire batch
+     *      • No access control beyond signature verification - anyone can submit valid signatures
+     *      • Nonce invalidation happens immediately to prevent race conditions
+     *
+     * @dev VALIDATOR REQUIREMENTS:
+     *      • Must implement IValidator interface with isValidSignatureWithSender function
+     *      • Must return ERC1271_MAGICVALUE (0x1626ba7e) for valid signatures
+     *      • Should validate signature format according to its specific scheme (ECDSA, multi-sig, etc.)
+     *      • May implement additional security checks as needed
+     *
+     * @dev EXECUTION DATA STRUCTURE:
+     *      Each Execution contains:
+     *      • target: Contract address to call (can be EOA for ETH transfers)
+     *      • value: Amount of ETH to send (in wei)
+     *      • callData: Encoded function call data (empty for simple ETH transfers)
+     *
+     * @param executions Array of transactions to execute on the current chain
+     *                   Each execution specifies target contract, ETH value, and call data
+     *                   Executions are processed in array order with atomic success/failure
+     * @param nonce Unique identifier for this signature that must not have been used before
+     *              Each nonce can only be used once per account to prevent replay attacks
+     *              Once used, the nonce is permanently invalidated for this account
+     * @param signature EIP-712 signature authorizing the execution
+     *                  Format: [validatorAddress(20 bytes)][signature_data(variable length)]
+     *                  The validator address specifies which module should verify the signature
+     *                  Signature data format depends on the specific validator implementation
+     *
+     * @return results Array of return data from each executed transaction
+     *                 Length matches executions array, with each element containing the return data
+     *                 from the corresponding execution (empty bytes for transactions without return data)
+     *
+     * @custom:example Basic usage:
+     * ```solidity
+     * // Prepare executions
+     * Execution[] memory executions = new Execution[](2);
+     * executions[0] = Execution({
+     *     target: tokenContract,
+     *     value: 0,
+     *     callData: abi.encodeCall(IERC20.transfer, (recipient, amount))
+     * });
+     * executions[1] = Execution({
+     *     target: recipient,
+     *     value: 1 ether,
+     *     callData: ""
+     * });
+     *
+     * // Create signature (validator address + signature data)
+     * bytes memory signature = abi.encodePacked(validatorAddress, signatureData);
+     *
+     * // Execute with single chain signature
+     * bytes[] memory results = account.executeWithSig(executions, nonce, signature);
+     * ```
+     *
+     * @custom:security-note This function is critical for account security. The validator modules
+     *                       and signature verification logic must be thoroughly audited.
+     *                       Nonce validation prevents replay attacks and ensures transaction uniqueness.
+     *
+     * @custom:gas-note Gas costs scale linearly with the number of executions and complexity
+     *                  of each transaction. Large batches should be tested for gas limit constraints.
+     */
+    function executeWithSig(Execution[] calldata executions, uint256 nonce, bytes calldata signature) external returns (bytes[] memory results) {
+        // SECURITY: Nonce validation - Critical for preventing replay attacks
+        // Each nonce can only be used once per account to ensure transaction uniqueness
+        // This prevents malicious actors from re-executing the same transaction multiple times
+        require(!_getAccountStorage().nonces[nonce], InvalidNonce());
+
+        // SECURITY: Nonce invalidation - Mark nonce as used immediately after validation
+        // This prevents any potential race conditions or reentrancy attacks that could
+        // allow the same nonce to be used twice within the same transaction
+        _getAccountStorage().nonces[nonce] = true;
+
+        // SECURITY: Current chain execution hash calculation
+        // This creates a unique hash representing the executions intended for this specific chain
+        // The hash includes: chainId (prevents cross-chain replay), nonce (prevents replay),
+        // and execution data (ensures data integrity)
+        bytes32 hash = EIP712Hash.hashChainExecutions(block.chainid, nonce, EIP712Hash.hashExecutions(executions));
+
+        // SECURITY: EIP-712 structured data hash creation
+        // Generate the final digest that will be verified against the signature
+        // This ensures the signature was created for this specific contract (domain separation)
+        // and follows EIP-712 standard for structured data signing
+        bytes32 digest = _hashTypedDataSansChainId(hash);
+
+        // SECURITY: Validator extraction from signature
+        // First 20 bytes of signature specify which validator module should verify the signature
+        // This allows flexible signature schemes while maintaining security
+        // The validator address is trusted to properly verify the signature format it expects
+        address validator = _handleValidator(address(bytes20(signature[0:20])));
+
+        // SECURITY: Pre-validation hook processing
+        // Apply any additional security checks configured for this account
+        // Hooks can modify the hash or signature, or add extra validation logic
+        // This provides extensible security mechanisms beyond basic signature verification
+        bytes memory signature_;
+        (hash, signature_) = _withPreValidationHook(hash, signature[20:]);
+
+        // SECURITY: Signature verification - The core authorization check
+        // Delegate to the specified validator module to verify the signature
+        // The validator must return ERC1271_MAGICVALUE (0x1626ba7e) for valid signatures
+        // This follows ERC-1271 standard for contract signature verification
+        bytes4 validSig = IValidator(validator).isValidSignatureWithSender(msg.sender, digest, signature_);
+        if (validSig != ERC1271_MAGICVALUE) revert InvalidSignature();
+
+        // SECURITY: Execution phase - Only reached after all security checks pass
+        // Execute all transactions in the executions array in the specified order
+        // If any execution fails, the entire transaction reverts, maintaining atomicity
+        // This ensures either all operations succeed or none do, preventing partial state changes
+        results = _executeBatch(executions);
     }
 }
