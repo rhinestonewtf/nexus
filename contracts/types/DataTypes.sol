@@ -35,3 +35,17 @@ struct EmergencyUninstall {
     /// @notice Nonce used to prevent replay attacks
     uint256 nonce;
 }
+
+struct MultiChainExecutions {
+    ChainExecutions[] multiChainExecutions;
+}
+
+struct ChainExecutions {
+    uint256 chainId;
+    Execution[] executions;
+}
+
+struct OtherChains {
+    uint256 chainPtr;
+    bytes32[] otherChains;
+}

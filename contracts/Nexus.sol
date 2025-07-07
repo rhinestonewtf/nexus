@@ -31,7 +31,8 @@ import {
     MODULE_TYPE_PREVALIDATION_HOOK_ERC4337,
     SUPPORTS_ERC7739,
     VALIDATION_SUCCESS,
-    VALIDATION_FAILED
+    VALIDATION_FAILED,
+    ERC1271_MAGICVALUE
 } from "./types/Constants.sol";
 import {
     ModeLib,
@@ -44,11 +45,11 @@ import {
     EXECTYPE_DEFAULT,
     EXECTYPE_TRY
 } from "./lib/ModeLib.sol";
-import { EIP712Hash } from "../types/EIP712Types.sol";
+import { EIP712Hash, EIP712Types } from "./types/EIP712Type.sol";
 import { NonceLib } from "./lib/NonceLib.sol";
 import { SentinelListLib, SENTINEL, ZERO_ADDRESS } from "sentinellist/SentinelList.sol";
 import { Initializable } from "./lib/Initializable.sol";
-import { EmergencyUninstall } from "./types/DataTypes.sol";
+import { EmergencyUninstall, Execution } from "./types/DataTypes.sol";
 import { LibPREP } from "lib-prep/LibPREP.sol";
 import { ComposableExecutionBase, ComposableExecution } from "composability/ComposableExecutionBase.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
@@ -575,11 +576,11 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
         version = "1.2.0";
     }
 
-    function execute(ChainExecutions calldata chainExecutions, bytes32[] calldata allChains, uint256 chainIdPtr, bytes calldata signature) external {
-        bytes32 hash = EIP712Hash.hashChainExecutions(chainExecutions.chainId, EIP712Hash.hashExecutions(chainExecutions.executions));
+    function executeWithSig(Execution[] calldata executions, bytes32[] calldata allChains, uint256 chainIdPtr, bytes calldata signature) external {
+        bytes32 hash = EIP712Hash.hashChainExecutions(block.chainid, EIP712Hash.hashExecutions(executions));
 
         // we ensure that the ChainExecutions hash is in the allChains array.
-        require(allChains[chainIdPtr] == hash, "Invalid MultiChainHash");
+        if (allChains[chainIdPtr] != hash) revert InvalidMultiChainHash();
         // now we create MultiChainExecutions hash
         hash = EIP712Hash.hashMultiChainExecutions(keccak256(abi.encodePacked(allChains)));
         bytes32 digest = _hashTypedDataSansChainId(hash);
@@ -587,10 +588,9 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
         address validator = _handleValidator(address(bytes20(signature[0:20])));
         bytes memory signature_;
         (hash, signature_) = _withPreValidationHook(hash, signature[20:]);
-        try IValidator(validator).isValidSignatureWithSender(msg.sender, hash, signature_) returns (bytes4 res) {
-            return res;
-        } catch {
-            return bytes4(0xffffffff);
-        }
+        bytes4 validSig = IValidator(validator).isValidSignatureWithSender(msg.sender, digest, signature_);
+        if (validSig != ERC1271_MAGICVALUE) revert InvalidSignature();
+
+        _executeBatch(executions);
     }
 }

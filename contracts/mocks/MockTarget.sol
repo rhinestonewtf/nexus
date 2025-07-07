@@ -8,4 +8,12 @@ contract MockTarget {
         value = _value;
         return _value;
     }
+
+    function receiveEther() public payable {
+        // Function to receive Ether
+    }
+
+    receive() external payable {
+        // Fallback function to receive Ether
+    }
 }

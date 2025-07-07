@@ -68,4 +68,7 @@ interface INexusEventsAndErrors {
 
     /// @notice Error thrown when the provided signature is invalid.
     error InvalidSignature();
+
+    /// @notice Error thrown when the multi-chain hash is invalid.
+    error InvalidMultiChainHash();
 }
