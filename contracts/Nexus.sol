@@ -70,6 +70,9 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
     /// @dev The timelock period for emergency hook uninstallation.
     uint256 internal constant _EMERGENCY_TIMELOCK = 1 days;
 
+    /// @dev Cached implementation address;
+    address immutable _IMPLEMENTATION;
+
     /// @dev The event emitted when an emergency hook uninstallation is initiated.
     event EmergencyHookUninstallRequest(address hook, uint256 timestamp);
 
@@ -80,6 +83,7 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
     constructor(address anEntryPoint, address defaultValidator, bytes memory initData) ModuleManager(defaultValidator, initData) {
         require(address(anEntryPoint) != address(0), EntryPointCanNotBeZero());
         _ENTRYPOINT = anEntryPoint;
+        _IMPLEMENTATION = address(this);
     }
 
     /// @notice Validates a user operation against a specified validator, extracted from the operation's nonce.
@@ -317,7 +321,7 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
                 // Remove the signature  from the initData
                 initData = initData[65:];
                 // Calculate the hash of the initData
-                bytes32 initDataHash = initData.toEthSignedMessageHash();
+                bytes32 initDataHash = abi.encodePacked(_IMPLEMENTATION, initData).toEthSignedMessageHash();
                 // Make sure the initHash is not already used
                 require(!$accountStorage.erc7702InitHashes[initDataHash], AccountAlreadyInitialized());
                 // Check if the signature is valid
