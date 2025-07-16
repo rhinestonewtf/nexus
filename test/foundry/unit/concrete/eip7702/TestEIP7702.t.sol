@@ -9,6 +9,7 @@ import { IHook } from "contracts/interfaces/modules/IHook.sol";
 import { IPreValidationHookERC1271, IPreValidationHookERC4337 } from "contracts/interfaces/modules/IPreValidationHook.sol";
 import { MockPreValidationHook } from "contracts/mocks/MockPreValidationHook.sol";
 import { MockTransferer } from "contracts/mocks/MockTransferer.sol";
+import { InitializeLib } from "contracts/lib/InitializeLib.sol";
 
 contract TestEIP7702 is NexusTest_Base {
     using ECDSA for bytes32;
@@ -267,91 +268,222 @@ contract TestEIP7702 is NexusTest_Base {
         assertTrue(IExposedNexus(eip7702account).amIERC7702());
     }
 
-    function test_initializeAccount_7702_with_relayer() public {
-        // Get the account (EOA that will become 7702)
+    function test_initializeAccount_7702_anyChain() public {
         uint256 eoaKey = uint256(8);
         address account = vm.addr(eoaKey);
         vm.deal(account, 100 ether);
-
-        // Set up as ERC-7702 account
         _doEIP7702(account);
 
-        // Prepare the actual initialization data (without signature and nonce)
         bytes memory actualInitData = _getInitData();
 
-        // Calculate the hash that needs to be signed
-        bytes32 initDataHash = abi.encodePacked(ACCOUNT_IMPLEMENTATION, actualInitData).toEthSignedMessageHash();
+        // Encode with chainId = 0 at index 0
+        uint256[] memory chainIds = new uint256[](1);
+        chainIds[0] = 0;
+        bytes memory encodedData = abi.encode(0, chainIds, actualInitData);
 
-        // Sign the hash with the EOA's private key
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, initDataHash);
+        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        bytes32 digest = _computeDigest(account, initDataHash);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, digest);
         bytes memory signature = abi.encodePacked(r, s, v);
+        bytes memory fullInitData = abi.encodePacked(signature, encodedData);
 
-        // Pack the full initData: signature (64 bytes) + nonce (32 bytes) + actual initData
-        bytes memory fullInitData = abi.encodePacked(signature, actualInitData);
-
-        // Use a different address as the relayer
         address relayer = makeAddr("relayer");
-        vm.deal(relayer, 1 ether);
-
-        // Call initializeAccount from the relayer
         vm.prank(relayer);
         INexus(account).initializeAccount(fullInitData);
     }
 
-    function test_initializeAccount_7702_replay_protection() public {
-        // Get the account
+    function test_initializeAccount_7702_multipleChainIds() public {
         uint256 eoaKey = uint256(8);
         address account = vm.addr(eoaKey);
         vm.deal(account, 100 ether);
-
-        // Set up as ERC-7702 account
         _doEIP7702(account);
 
-        // Prepare initialization data
         bytes memory actualInitData = _getInitData();
 
-        // Sign the initialization
-        bytes32 initDataHash = abi.encodePacked(ACCOUNT_IMPLEMENTATION, actualInitData).toEthSignedMessageHash();
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, initDataHash);
+        // Create array with multiple chains, current chain at index 2
+        uint256[] memory chainIds = new uint256[](4);
+        chainIds[0] = 1;
+        chainIds[1] = 137;
+        chainIds[2] = block.chainid;
+        chainIds[3] = 42_161;
+
+        bytes memory encodedData = abi.encode(2, chainIds, actualInitData); // index 2 = current chain
+
+        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        bytes32 digest = _computeDigest(account, initDataHash);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, digest);
         bytes memory signature = abi.encodePacked(r, s, v);
+        bytes memory fullInitData = abi.encodePacked(signature, encodedData);
 
-        bytes memory fullInitData = abi.encodePacked(signature, actualInitData);
-
-        // First initialization should succeed
         address relayer = makeAddr("relayer");
         vm.prank(relayer);
         INexus(account).initializeAccount(fullInitData);
+    }
 
-        // Second initialization with same data should fail
+    function test_initializeAccount_7702_wrongChainIdAtIndex() public {
+        uint256 eoaKey = uint256(8);
+        address account = vm.addr(eoaKey);
+        vm.deal(account, 100 ether);
+        _doEIP7702(account);
+
+        bytes memory actualInitData = _getInitData();
+
+        // Array with wrong chain at index 1
+        uint256[] memory chainIds = new uint256[](3);
+        chainIds[0] = 1;
+        chainIds[1] = 999; // Wrong chain
+        chainIds[2] = 137;
+
+        bytes memory encodedData = abi.encode(1, chainIds, actualInitData); // index 1 points to wrong chain
+        vm.expectRevert(InitializeLib.UnsupportedChain.selector);
+        this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+    }
+
+    function test_initializeAccount_7702_indexOutOfBounds() public {
+        uint256 eoaKey = uint256(8);
+        address account = vm.addr(eoaKey);
+        vm.deal(account, 100 ether);
+        _doEIP7702(account);
+
+        bytes memory actualInitData = _getInitData();
+
+        uint256[] memory chainIds = new uint256[](2);
+        chainIds[0] = 1;
+        chainIds[1] = 137;
+
+        bytes memory encodedData = abi.encode(5, chainIds, actualInitData); // index 5 out of bounds
+
+        // This should revert during decoding
+        vm.expectRevert();
+        this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+    }
+
+    function test_initializeAccount_7702_replayProtection() public {
+        uint256 eoaKey = uint256(8);
+        address account = vm.addr(eoaKey);
+        vm.deal(account, 100 ether);
+        _doEIP7702(account);
+
+        bytes memory actualInitData = _getInitData();
+
+        uint256[] memory chainIds = new uint256[](1);
+        chainIds[0] = 0;
+        bytes memory encodedData = abi.encode(0, chainIds, actualInitData);
+
+        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        bytes32 digest = _computeDigest(account, initDataHash);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        bytes memory fullInitData = abi.encodePacked(signature, encodedData);
+
+        address relayer = makeAddr("relayer");
+
+        // First init succeeds
+        vm.prank(relayer);
+        INexus(account).initializeAccount(fullInitData);
+
+        // Second init with same data fails
         vm.prank(relayer);
         vm.expectRevert(AccountAlreadyInitialized.selector);
         INexus(account).initializeAccount(fullInitData);
     }
 
-    function test_initializeAccount_7702_invalid_signature() public {
-        // Get the account
+    function test_initializeAccount_7702_invalidSignature() public {
         uint256 eoaKey = uint256(8);
         address account = vm.addr(eoaKey);
         vm.deal(account, 100 ether);
-
-        // Set up as ERC-7702 account
         _doEIP7702(account);
 
-        // Prepare initialization data
         bytes memory actualInitData = _getInitData();
 
-        // Sign with a different key (wrong signature)
+        uint256[] memory chainIds = new uint256[](1);
+        chainIds[0] = 0;
+        bytes memory encodedData = abi.encode(0, chainIds, actualInitData);
+
+        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        bytes32 digest = _computeDigest(account, initDataHash);
+
+        // Sign with wrong key
         uint256 wrongKey = uint256(999);
-        bytes32 initDataHash = abi.encodePacked(ACCOUNT_IMPLEMENTATION, actualInitData).toEthSignedMessageHash();
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongKey, initDataHash);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongKey, digest);
         bytes memory signature = abi.encodePacked(r, s, v);
+        bytes memory fullInitData = abi.encodePacked(signature, encodedData);
 
-        bytes memory fullInitData = abi.encodePacked(signature, actualInitData);
-
-        // Should fail with InvalidSignature
         address relayer = makeAddr("relayer");
         vm.prank(relayer);
         vm.expectRevert(InvalidSignature.selector);
         INexus(account).initializeAccount(fullInitData);
+    }
+
+    function test_initializeAccount_7702_withDifferentRelayers() public {
+        uint256 eoaKey = uint256(8);
+        address account = vm.addr(eoaKey);
+        vm.deal(account, 100 ether);
+        _doEIP7702(account);
+
+        bytes memory actualInitData = _getInitData();
+
+        uint256[] memory chainIds = new uint256[](1);
+        chainIds[0] = 0;
+        bytes memory encodedData = abi.encode(0, chainIds, actualInitData);
+
+        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        bytes32 digest = _computeDigest(account, initDataHash);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        bytes memory fullInitData = abi.encodePacked(signature, encodedData);
+
+        // First relayer initializes
+        address relayer1 = makeAddr("relayer1");
+        vm.prank(relayer1);
+        INexus(account).initializeAccount(fullInitData);
+
+        // Different relayer tries same init data - should fail
+        address relayer2 = makeAddr("relayer2");
+        vm.prank(relayer2);
+        vm.expectRevert(AccountAlreadyInitialized.selector);
+        INexus(account).initializeAccount(fullInitData);
+    }
+
+    function test_initializeAccount_7702_invalidInitDataLength() public {
+        uint256 eoaKey = uint256(8);
+        address account = vm.addr(eoaKey);
+        vm.deal(account, 100 ether);
+        _doEIP7702(account);
+
+        // Create invalid init data (too short)
+        bytes memory shortInitData = abi.encodePacked(
+            new uint256[](1), // empty chainIds
+            bytes("") // empty initData
+        );
+
+        address relayer = makeAddr("relayer");
+        vm.prank(relayer);
+        vm.expectRevert(); // Should revert during signature extraction
+        INexus(account).initializeAccount(shortInitData);
+    }
+
+    function _computeDigest(address account, bytes32 structHash) internal pure returns (bytes32) {
+        string memory name = "Nexus";
+        string memory version = "1.2.0";
+
+        bytes32 domainSeparator = keccak256(
+            abi.encode(
+                0x91ab3d17e3a50a9d89e63fd30b92be7f5336b03b287bb946787a83a9d62a2766, // _DOMAIN_TYPEHASH_SANS_CHAIN_ID
+                keccak256(bytes(name)),
+                keccak256(bytes(version)),
+                account
+            )
+        );
+
+        return keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+    }
+
+    function hashInitData(bytes calldata data, address implementation) public view returns (bytes32) {
+        return InitializeLib.hash(data, implementation);
     }
 }
