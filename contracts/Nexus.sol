@@ -323,8 +323,8 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
                 initData = initData[65:];
                 // Calculate the hash of the initData
                 bytes32 initDataHash = initData.hash(_IMPLEMENTATION);
-                // Calculate the digest (excluding chainId as it's implicitly checked)
-                initDataHash = _hashTypedDataSansChainId(initDataHash);
+                // Calculate the digest (excluding chainId and verifying contract as it's implicitly checked)
+                initDataHash = _hashTypedDataSansChainIdAndVerifyingContract(initDataHash);
                 // Make sure the initHash is not already used
                 require(!$accountStorage.erc7702InitHashes[initDataHash], AccountAlreadyInitialized());
                 // Check if the signature is valid

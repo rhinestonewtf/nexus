@@ -473,10 +473,9 @@ contract TestEIP7702 is NexusTest_Base {
 
         bytes32 domainSeparator = keccak256(
             abi.encode(
-                0x91ab3d17e3a50a9d89e63fd30b92be7f5336b03b287bb946787a83a9d62a2766, // _DOMAIN_TYPEHASH_SANS_CHAIN_ID
+                0xb03948446334eb9b2196d5eb166f69b9d49403eb4a12f36de8d3f9f3cb8e15c3, // _DOMAIN_TYPEHASH_SANS_CHAIN_ID_AND_VERIFYING_CONTRACT
                 keccak256(bytes(name)),
-                keccak256(bytes(version)),
-                account
+                keccak256(bytes(version))
             )
         );
 
