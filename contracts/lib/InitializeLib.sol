@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.27;
 
-import { console } from "forge-std/console.sol";
-
 /// @title Initialize Library
 /// @dev Provides hashing and chain verification functions for account initialization.
 library InitializeLib {
