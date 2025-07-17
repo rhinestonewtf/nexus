@@ -1,12 +1,12 @@
 [deployments]
 rpcs = [
-  # "http://localhost:8545",
+  "http://localhost:8545",
 # "https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
-"https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+# "https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
@@ -55,9 +55,9 @@ rpcs = [
 # "https://zora-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 ]
 
-[deployments.verifier]
+# [deployments.verifier]
 # required to enable verification
-api_key="${ETHERSCAN_API_KEY}"
+# api_key="${ETHERSCAN_API_KEY}"
 
 [deployments.dependencies]
 
