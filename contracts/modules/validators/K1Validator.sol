@@ -79,7 +79,7 @@ contract K1Validator is IValidator, ERC7739Validator {
         require(!_isInitialized(msg.sender), ModuleAlreadyInitialized());
         address newOwner = address(bytes20(data[:20]));
         require(newOwner != address(0), OwnerCannotBeZeroAddress());
-        smartAccountOwners[msg.sender] = newOwner;
+        _smartAccountOwners[msg.sender] = newOwner;
         emit OwnerSet(msg.sender, newOwner);
         if (data.length > 20) {
             _fillSafeSenders(data[20:]);
@@ -90,7 +90,7 @@ contract K1Validator is IValidator, ERC7739Validator {
      * De-initialize the module with the given data
      */
     function onUninstall(bytes calldata) external override {
-        delete smartAccountOwners[msg.sender];
+        delete _smartAccountOwners[msg.sender];
         _safeSenders.removeAll(msg.sender);
         emit OwnerSet(msg.sender, address(0));
     }
@@ -99,7 +99,7 @@ contract K1Validator is IValidator, ERC7739Validator {
     /// @param newOwner The address of the new owner
     function transferOwnership(address newOwner) external {
         require(newOwner != address(0), ZeroAddressNotAllowed());
-        smartAccountOwners[msg.sender] = newOwner;
+        _smartAccountOwners[msg.sender] = newOwner;
         emit OwnerSet(msg.sender, newOwner);
     }
 
@@ -185,7 +185,7 @@ contract K1Validator is IValidator, ERC7739Validator {
      * @return The owner of the smart account
      */
     function getOwner(address smartAccount) public view returns (address) {
-        address owner = smartAccountOwners[smartAccount];
+        address owner = _smartAccountOwners[smartAccount];
         return owner == address(0) ? smartAccount : owner;
     }
 
@@ -273,6 +273,6 @@ contract K1Validator is IValidator, ERC7739Validator {
     /// @param smartAccount The address of the smart account
     /// @return True if the smart account has an owner, false otherwise
     function _isInitialized(address smartAccount) private view returns (bool) {
-        return smartAccountOwners[smartAccount] != address(0);
+        return _smartAccountOwners[smartAccount] != address(0);
     }
 }

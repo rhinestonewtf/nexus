@@ -51,6 +51,7 @@ import { EmergencyUninstall } from "./types/DataTypes.sol";
 import { LibPREP } from "lib-prep/LibPREP.sol";
 import { ComposableExecutionBase, ComposableExecution } from "composability/ComposableExecutionBase.sol";
 import { ECDSA } from "solady/utils/ECDSA.sol";
+import { InitializeLib } from "./lib/InitializeLib.sol";
 
 /// @title Nexus - Smart Account
 /// @notice This contract integrates various functionalities to handle modular smart accounts compliant with ERC-7579 and ERC-4337 standards.
@@ -65,10 +66,13 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
     using ExecLib for bytes;
     using NonceLib for uint256;
     using SentinelListLib for SentinelListLib.SentinelList;
-    using ECDSA for bytes;
+    using InitializeLib for bytes;
 
     /// @dev The timelock period for emergency hook uninstallation.
     uint256 internal constant _EMERGENCY_TIMELOCK = 1 days;
+
+    /// @dev Cached implementation address;
+    address immutable _IMPLEMENTATION;
 
     /// @dev The event emitted when an emergency hook uninstallation is initiated.
     event EmergencyHookUninstallRequest(address hook, uint256 timestamp);
@@ -80,6 +84,7 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
     constructor(address anEntryPoint, address defaultValidator, bytes memory initData) ModuleManager(defaultValidator, initData) {
         require(address(anEntryPoint) != address(0), EntryPointCanNotBeZero());
         _ENTRYPOINT = anEntryPoint;
+        _IMPLEMENTATION = address(this);
     }
 
     /// @notice Validates a user operation against a specified validator, extracted from the operation's nonce.
@@ -317,7 +322,9 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
                 // Remove the signature  from the initData
                 initData = initData[65:];
                 // Calculate the hash of the initData
-                bytes32 initDataHash = initData.toEthSignedMessageHash();
+                bytes32 initDataHash = initData.hash(_IMPLEMENTATION);
+                // Calculate the digest (excluding chainId and verifying contract as it's implicitly checked)
+                initDataHash = _hashTypedDataSansChainIdAndVerifyingContract(initDataHash);
                 // Make sure the initHash is not already used
                 require(!$accountStorage.erc7702InitHashes[initDataHash], AccountAlreadyInitialized());
                 // Check if the signature is valid
