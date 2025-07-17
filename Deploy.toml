@@ -1,11 +1,12 @@
 [deployments]
 rpcs = [
-"https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+  # "http://localhost:8545",
+# "https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
-# "https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+"https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
@@ -63,30 +64,30 @@ api_key="${ETHERSCAN_API_KEY}"
 [deployments.singleton.Nexus]
 file = "./artifacts/Nexus/Nexus.json"
 source_file="./artifacts/Nexus/verify.json"
-salt = "0x0000000000000000000000000000000000000000d21f121ea506a800a7422403"
+salt = "0x0000000000000000000000000000000000000000877ce33032431f0067de6123"
 args_sig = "(address,address,bytes)"
 args = [
 "0x0000000071727De22E5E9d8BAf0edAc6f37da032", # entryPoint 
-"0x2483DA3A338895199E5e538530213157e931Bf06", # default validator
-"0x" # initData
+"0x0000000000E9E6E96Bcaa3c113187CdB7E38AED9", # default validator
+"0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000061e8ac0a758afeefbd556f713ecf0a8cbd00288f" # initData
 ]
 
 [deployments.singleton.NexusBootstrap]
 file = "./artifacts/NexusBootstrap/NexusBootstrap.json"
 source_file="./artifacts/NexusBootstrap/verify.json"
-salt = "0x0000000000000000000000000000000000000000d21f121ea506a800a7422403"
+salt = "0x0000000000000000000000000000000000000000ff6835f409216100600abd99"
 args_sig = "(address,bytes)"
 args = [
-"0x2483DA3A338895199E5e538530213157e931Bf06", # default validator
-"0x" # initData
+"0x0000000000E9E6E96Bcaa3c113187CdB7E38AED9", # default validator
+"0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000061e8ac0a758afeefbd556f713ecf0a8cbd00288f" # initData
 ]
 
 [deployments.singleton.NexusAccountFactory]
-file = "./artifacts/NexusBootstrap/NexusBootstrap.json"
-source_file="./artifacts/NexusBootstrap/verify.json"
+file = "./artifacts/NexusAccountFactory/NexusAccountFactory.json"
+source_file="./artifacts/NexusAccountFactory/verify.json"
 args_sig = "(address,address)"
 args = [
-"0x0000000071727De22E5E9d8BAf0edAc6f37da032", # implementation
-"0x0000000000000000000000000000000000000000" # owner
+"0x000000000071dF28D0f7918a652Ffe45f8118686", # implementation
+"0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # owner
 ]
-salt = "0x0000000000000000000000000000000000000000c252bee936886a01c9ae3966"
+salt = "0x0000000000000000000000000000000000000000b34a5f0b50c89401108a816d"
