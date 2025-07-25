@@ -5,12 +5,14 @@ rpcs = [
 # "https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
-# "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
-"https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+ # "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+# "https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://polygon-amoy.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+# "https://zksync-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+# "https://zksync-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://gnosis-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://bnb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://bnb-testnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
@@ -20,6 +22,8 @@ rpcs = [
 # "https://scroll-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://sonic-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://sonic-blaze.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+# "https://soneium-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+# "https://soneium-minato.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://rpc.fuse.io",
 # "https://rpc.fusespark.io",
 # "https://odyssey.ithaca.xyz",
@@ -41,8 +45,6 @@ rpcs = [
 # "https://network.ambrosus-test.io",
 # "https://json-rpc.evm.iotaledger.net",
 # "https://json-rpc.evm.testnet.iotaledger.net",
-# "https://rpc.soneium.org",
-# "https://rpc.minato.soneium.org",
 # "https://carrot.megaeth.com/rpc",
 # "https://rpc.mantle.xyz",
 # "https://rpc.testnet.mantle.xyz",
@@ -55,23 +57,24 @@ rpcs = [
 # "https://zora-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 ]
 
-# [deployments.verifier]
+[deployments.verifier]
 # required to enable verification
-# api_key="${ETHERSCAN_API_KEY}"
+api_key="${ETHERSCAN_API_KEY}"
+# url="https://api.etherscan.io/v2/api?chainid={{chain_id}}"
 
 [deployments.dependencies]
 
 [deployments.singleton.Nexus]
 file = "./artifacts/Nexus/Nexus.json"
 source_file="./artifacts/Nexus/verify.json"
-salt = "0x0000000000000000000000000000000000000000427dda5c59d3c2016bc99c40"
+salt = "0x00000000000000000000000000000000000000006901d55a4c36ef0263232826"
 args_sig = "(address,address,bytes)"
 args = [
 "0x0000000071727De22E5E9d8BAf0edAc6f37da032", # entryPoint 
 "0x0000000000E9E6E96Bcaa3c113187CdB7E38AED9", # default validator
 "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000061e8ac0a758afeefbd556f713ecf0a8cbd00288f" # initData
 ]
-# 0x956faa9c1976add8f81ddf6376cec1285833f0c218b1e5bbe751da005fb6dd80
+# 0x78dab2924751921722e289b8176f054a43da123c507de028d7efe5c58cbcf6b8
 
 [deployments.singleton.NexusBootstrap]
 file = "./artifacts/NexusBootstrap/NexusBootstrap.json"
@@ -82,15 +85,14 @@ args = [
 "0x0000000000E9E6E96Bcaa3c113187CdB7E38AED9", # default validator
 "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000061e8ac0a758afeefbd556f713ecf0a8cbd00288f" # initData
 ]
-# 0x1b1575ecfc266ac91ac25b35d9eb192d6c935bcf52585f17ce803449216b4bbb
 
 [deployments.singleton.NexusAccountFactory]
 file = "./artifacts/NexusAccountFactory/NexusAccountFactory.json"
 source_file="./artifacts/NexusAccountFactory/verify.json"
 args_sig = "(address,address)"
 args = [
-"0x00000000006a1bF4cBa18564Ecc916c3Cf768111", # implementation
+"$Nexus", # implementation
 "0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # owner
 ]
-salt = "0x00000000000000000000000000000000000000000b0fe3ded3ff52016bc19c3b"
-# 0xafdd5a4eb4c27ce0acef5cfae09cc2261b3182940a382c36ff76d7f084664ef3
+salt = "0x00000000000000000000000000000000000000002d4b5e06fbaa7e0388a8374b"
+# 0x954c4a19cf19d59423d9fe417f54c4dfca4aad127a0d089aedbe7e60c2631bf5
