@@ -15,8 +15,8 @@ library InitializeLib {
                                CONSTANTS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice keccak256("Initialize(address nexus, uint256[] chainIds, bytes initData)")
-    bytes32 public constant INITIALIZE_TYPEHASH = 0xe8d702c67a5154c8eb044578210a2b0b2c15e4648134bd6694250e86be4a59c1;
+    /// @notice keccak256("Initialize(address nexus,uint256[] chainIds,bytes initData)")
+    bytes32 public constant INITIALIZE_TYPEHASH = 0xf519a60f511204e58bb5b531a9f542b2ed706bb768589316a8be873ab2cfeb09;
 
     /*//////////////////////////////////////////////////////////////
                                   HASH
