@@ -268,7 +268,7 @@ contract TestEIP7702 is NexusTest_Base {
         assertTrue(IExposedNexus(eip7702account).amIERC7702());
     }
 
-    function test_initializeAccount_7702_anyChain() public {
+    function test_initializeAccount_7702_anyChain() public checkModulesInstalled(vm.addr(uint256(8))) {
         uint256 eoaKey = uint256(8);
         address account = vm.addr(eoaKey);
         vm.deal(account, 100 ether);
@@ -279,9 +279,15 @@ contract TestEIP7702 is NexusTest_Base {
         // Encode with chainId = 0 at index 0
         uint256[] memory chainIds = new uint256[](1);
         chainIds[0] = 0;
-        bytes memory encodedData = abi.encode(0, chainIds, actualInitData);
+        bytes memory encodedData = abi.encodePacked(
+            uint256(0), // chainIdIndex
+            uint256(chainIds.length), // chainIdsLength
+            chainIds[0], // chainIds elements
+            actualInitData // initData
+        );
 
-        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        (bytes32 initDataHash, bytes memory trimmedInitData) = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        require(keccak256(trimmedInitData) == keccak256(actualInitData), "Init data mismatch");
         bytes32 digest = _computeDigest(account, initDataHash);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, digest);
@@ -293,7 +299,7 @@ contract TestEIP7702 is NexusTest_Base {
         INexus(account).initializeAccount(fullInitData);
     }
 
-    function test_initializeAccount_7702_multipleChainIds() public {
+    function test_initializeAccount_7702_multipleChainIds() public checkModulesInstalled(vm.addr(uint256(8))) {
         uint256 eoaKey = uint256(8);
         address account = vm.addr(eoaKey);
         vm.deal(account, 100 ether);
@@ -308,9 +314,18 @@ contract TestEIP7702 is NexusTest_Base {
         chainIds[2] = block.chainid;
         chainIds[3] = 42_161;
 
-        bytes memory encodedData = abi.encode(2, chainIds, actualInitData); // index 2 = current chain
+        bytes memory encodedData = abi.encodePacked(
+            uint256(2),
+            uint256(chainIds.length), // chainIdsLength
+            chainIds[0], // chainIds elements
+            chainIds[1],
+            chainIds[2],
+            chainIds[3],
+            actualInitData // initData
+        );
 
-        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        (bytes32 initDataHash, bytes memory trimmedInitData) = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        require(keccak256(trimmedInitData) == keccak256(actualInitData), "Init data mismatch");
         bytes32 digest = _computeDigest(account, initDataHash);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, digest);
@@ -336,7 +351,14 @@ contract TestEIP7702 is NexusTest_Base {
         chainIds[1] = 999; // Wrong chain
         chainIds[2] = 137;
 
-        bytes memory encodedData = abi.encode(1, chainIds, actualInitData); // index 1 points to wrong chain
+        bytes memory encodedData = abi.encodePacked(
+            uint256(1), // chainIdIndex
+            uint256(chainIds.length), // chainIdsLength
+            chainIds[0], // chainIds elements
+            chainIds[1],
+            chainIds[2],
+            actualInitData // initData
+        );
         vm.expectRevert(InitializeLib.UnsupportedChain.selector);
         this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
     }
@@ -353,14 +375,20 @@ contract TestEIP7702 is NexusTest_Base {
         chainIds[0] = 1;
         chainIds[1] = 137;
 
-        bytes memory encodedData = abi.encode(5, chainIds, actualInitData); // index 5 out of bounds
+        bytes memory encodedData = abi.encodePacked(
+            uint256(5), // chainIdIndex out of bounds
+            uint256(chainIds.length), // chainIdsLength
+            chainIds[0], // chainIds elements
+            chainIds[1],
+            actualInitData // initData
+        );
 
         // This should revert during decoding
-        vm.expectRevert();
+        vm.expectRevert(InitializeLib.ChainIndexOutOfBounds.selector);
         this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
     }
 
-    function test_initializeAccount_7702_replayProtection() public {
+    function test_initializeAccount_7702_replayProtection() public checkModulesInstalled(vm.addr(uint256(8))) {
         uint256 eoaKey = uint256(8);
         address account = vm.addr(eoaKey);
         vm.deal(account, 100 ether);
@@ -370,9 +398,10 @@ contract TestEIP7702 is NexusTest_Base {
 
         uint256[] memory chainIds = new uint256[](1);
         chainIds[0] = 0;
-        bytes memory encodedData = abi.encode(0, chainIds, actualInitData);
+        bytes memory encodedData = abi.encodePacked(uint256(0), chainIds.length, chainIds[0], actualInitData);
 
-        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        (bytes32 initDataHash, bytes memory trimmedInitData) = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        require(keccak256(trimmedInitData) == keccak256(actualInitData), "Init data mismatch");
         bytes32 digest = _computeDigest(account, initDataHash);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, digest);
@@ -401,9 +430,10 @@ contract TestEIP7702 is NexusTest_Base {
 
         uint256[] memory chainIds = new uint256[](1);
         chainIds[0] = 0;
-        bytes memory encodedData = abi.encode(0, chainIds, actualInitData);
+        bytes memory encodedData = abi.encodePacked(uint256(0), chainIds.length, chainIds[0], actualInitData);
 
-        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        (bytes32 initDataHash, bytes memory trimmedInitData) = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        require(keccak256(trimmedInitData) == keccak256(actualInitData), "Init data mismatch");
         bytes32 digest = _computeDigest(account, initDataHash);
 
         // Sign with wrong key
@@ -418,7 +448,7 @@ contract TestEIP7702 is NexusTest_Base {
         INexus(account).initializeAccount(fullInitData);
     }
 
-    function test_initializeAccount_7702_withDifferentRelayers() public {
+    function test_initializeAccount_7702_withDifferentRelayers() public checkModulesInstalled(vm.addr(uint256(8))) {
         uint256 eoaKey = uint256(8);
         address account = vm.addr(eoaKey);
         vm.deal(account, 100 ether);
@@ -428,9 +458,10 @@ contract TestEIP7702 is NexusTest_Base {
 
         uint256[] memory chainIds = new uint256[](1);
         chainIds[0] = 0;
-        bytes memory encodedData = abi.encode(0, chainIds, actualInitData);
+        bytes memory encodedData = abi.encodePacked(uint256(0), chainIds.length, chainIds[0], actualInitData);
 
-        bytes32 initDataHash = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        (bytes32 initDataHash, bytes memory trimmedInitData) = this.hashInitData(encodedData, address(ACCOUNT_IMPLEMENTATION));
+        require(keccak256(trimmedInitData) == keccak256(actualInitData), "Init data mismatch");
         bytes32 digest = _computeDigest(account, initDataHash);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(eoaKey, digest);
@@ -467,6 +498,21 @@ contract TestEIP7702 is NexusTest_Base {
         INexus(account).initializeAccount(shortInitData);
     }
 
+    modifier checkModulesInstalled(address account) {
+        _;
+        // Check validator is installed
+        assertTrue(IModuleManager(account).isModuleInstalled(MODULE_TYPE_VALIDATOR, address(mockValidator), ""), "Validator not installed");
+
+        // Check executor is installed
+        assertTrue(IModuleManager(account).isModuleInstalled(MODULE_TYPE_EXECUTOR, address(mockExecutor), ""), "Executor not installed");
+
+        // Check prevalidation hook is installed
+        assertTrue(
+            IModuleManager(account).isModuleInstalled(MODULE_TYPE_PREVALIDATION_HOOK_ERC4337, address(mockPreValidationHook), ""),
+            "PreValidation hook not installed"
+        );
+    }
+
     function _computeDigest(address account, bytes32 structHash) internal pure returns (bytes32) {
         string memory name = "Nexus";
         string memory version = "1.2.0";
@@ -482,7 +528,7 @@ contract TestEIP7702 is NexusTest_Base {
         return keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function hashInitData(bytes calldata data, address implementation) public view returns (bytes32) {
-        return InitializeLib.hash(data, implementation);
+    function hashInitData(bytes calldata data, address implementation) public view returns (bytes32 hash, bytes calldata initData) {
+        (hash, initData) = InitializeLib.hash(data, implementation);
     }
 }
