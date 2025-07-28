@@ -41,15 +41,19 @@ library InitializeLib {
             let chainIdIndex := calldataload(data.offset)
             let chainIdsLength := calldataload(add(data.offset, 0x20))
 
-            // Calculate where chainIds start and end
+            // Calculate where chainIds start in calldata
             let chainIdsStart := add(data.offset, 0x40)
             let chainIdsSize := mul(chainIdsLength, 0x20)
-            let chainIdsEnd := add(chainIdsStart, chainIdsSize)
 
-            // Hash the chainIds directly from calldata
-            chainIdsHash := keccak256(chainIdsStart, chainIdsSize)
+            // Copy chainIds from calldata to memory
+            let ptr := mload(0x40)
+            calldatacopy(ptr, chainIdsStart, chainIdsSize)
+
+            // Hash chainIds
+            chainIdsHash := keccak256(ptr, chainIdsSize)
 
             // Set initData to point to the remaining calldata
+            let chainIdsEnd := add(chainIdsStart, chainIdsSize)
             initData.offset := chainIdsEnd
             initData.length := sub(add(data.offset, data.length), chainIdsEnd)
 

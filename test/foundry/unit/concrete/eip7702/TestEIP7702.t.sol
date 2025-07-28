@@ -498,6 +498,129 @@ contract TestEIP7702 is NexusTest_Base {
         INexus(account).initializeAccount(shortInitData);
     }
 
+    function test_hashMatchesBetweenPackedAndAbiEncoded() public view {
+        // Setup test data
+        uint256 chainIdIndex = 2;
+        uint256[] memory chainIds = new uint256[](4);
+        chainIds[0] = 1;
+        chainIds[1] = 137;
+        chainIds[2] = block.chainid; // Current chain at index 2
+        chainIds[3] = 42_161;
+
+        bytes memory actualInitData = _getInitData();
+
+        // Create packed format
+        bytes memory packedData = abi.encodePacked(chainIdIndex, chainIds.length, chainIds[0], chainIds[1], chainIds[2], chainIds[3], actualInitData);
+
+        // Get hash from packed format
+        (bytes32 packedHash, bytes memory packedInitData) = this.hashInitData(packedData, address(ACCOUNT_IMPLEMENTATION));
+
+        // Verify the extracted initData matches
+        assertEq(keccak256(packedInitData), keccak256(actualInitData), "Init data mismatch");
+
+        // Now compute the expected hash manually using the same formula
+        bytes32 chainIdsHash = keccak256(abi.encodePacked(chainIds));
+        bytes32 expectedHash =
+            keccak256(abi.encode(InitializeLib.INITIALIZE_TYPEHASH, address(ACCOUNT_IMPLEMENTATION), chainIdsHash, keccak256(actualInitData)));
+
+        // Verify hashes match
+        assertEq(packedHash, expectedHash, "Hash mismatch between packed and expected");
+    }
+
+    function test_hashWithDifferentChainIdFormats() public {
+        bytes memory actualInitData = _getInitData();
+
+        // Test 1: Single chain ID (0 = any chain)
+        uint256[] memory chainIds1 = new uint256[](1);
+        chainIds1[0] = 0;
+
+        bytes memory packedData1 = abi.encodePacked(
+            uint256(0), // chainIdIndex
+            uint256(1), // length
+            uint256(0), // chainIds[0]
+            actualInitData
+        );
+
+        (bytes32 hash1,) = this.hashInitData(packedData1, address(ACCOUNT_IMPLEMENTATION));
+
+        // Test 2: Multiple chain IDs with current chain
+        uint256[] memory chainIds2 = new uint256[](3);
+        chainIds2[0] = 1;
+        chainIds2[1] = block.chainid;
+        chainIds2[2] = 137;
+
+        bytes memory packedData2 = abi.encodePacked(
+            uint256(1), // chainIdIndex pointing to current chain
+            uint256(3), // length
+            chainIds2[0],
+            chainIds2[1],
+            chainIds2[2],
+            actualInitData
+        );
+
+        (bytes32 hash2,) = this.hashInitData(packedData2, address(ACCOUNT_IMPLEMENTATION));
+
+        // Hashes should be different because chainIds arrays are different
+        assertTrue(hash1 != hash2, "Hashes should differ for different chain configurations");
+
+        // Test 3: Same chainIds but different index
+        bytes memory packedData3 = abi.encodePacked(
+            uint256(0), // Different chainIdIndex
+            uint256(3), // Same length
+            chainIds2[0],
+            chainIds2[1],
+            chainIds2[2],
+            actualInitData
+        );
+
+        // This should revert because chainIds2[0] = 1, not 0 or current chain
+        vm.expectRevert(InitializeLib.UnsupportedChain.selector);
+        this.hashInitData(packedData3, address(ACCOUNT_IMPLEMENTATION));
+    }
+
+    function test_gasComparisonPackedVsAbiEncode() public {
+        bytes memory actualInitData = _getInitData();
+
+        uint256[] memory chainIds = new uint256[](10);
+        for (uint256 i = 0; i < 10; i++) {
+            chainIds[i] = i == 5 ? block.chainid : i + 1;
+        }
+
+        // Test 1: Packed format
+        bytes memory packedData = abi.encodePacked(uint256(5), uint256(10));
+        for (uint256 i = 0; i < 10; i++) {
+            packedData = abi.encodePacked(packedData, chainIds[i]);
+        }
+        packedData = abi.encodePacked(packedData, actualInitData);
+
+        // Test 2: ABI encoded format
+        bytes memory abiEncoded = abi.encode(5, chainIds, actualInitData);
+
+        // Verify both produce the same hash
+        uint256 gasBefore = gasleft();
+        (bytes32 packedHash,) = this.hashInitData(packedData, address(ACCOUNT_IMPLEMENTATION));
+        uint256 gasAfter = gasBefore - gasleft();
+        gasBefore = gasleft();
+        (bytes32 abiEncodedHash,) = this.hashInitDataAbiEncoded(abiEncoded, address(ACCOUNT_IMPLEMENTATION));
+        gasAfter = gasBefore - gasleft();
+        assertEq(packedHash, abiEncodedHash, "Hashes should match");
+
+        // Packed should be more compact
+        assertTrue(packedData.length < abiEncoded.length, "Packed should be smaller than ABI encoded");
+    }
+
+    // Helper function to hash ABI encoded data
+    function hashInitDataAbiEncoded(bytes calldata data, address nexus) external view returns (bytes32, bytes memory) {
+        // Decode the ABI encoded data
+        (uint256 chainIdIndex, uint256[] memory chainIds, bytes memory initData) = abi.decode(data, (uint256, uint256[], bytes));
+
+        // Validate chain
+        require(chainIds[chainIdIndex] == 0 || chainIds[chainIdIndex] == block.chainid, "UnsupportedChain");
+
+        // Hash using the same formula
+        return (keccak256(abi.encode(InitializeLib.INITIALIZE_TYPEHASH, nexus, keccak256(abi.encodePacked(chainIds)), keccak256(initData))), initData);
+    }
+
     modifier checkModulesInstalled(address account) {
         _;
         // Check validator is installed
@@ -528,7 +651,7 @@ contract TestEIP7702 is NexusTest_Base {
         return keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function hashInitData(bytes calldata data, address implementation) public view returns (bytes32 hash, bytes calldata initData) {
+    function hashInitData(bytes calldata data, address implementation) external view returns (bytes32 hash, bytes calldata initData) {
         (hash, initData) = InitializeLib.hash(data, implementation);
     }
 }
