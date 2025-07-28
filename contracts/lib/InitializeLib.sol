@@ -28,7 +28,7 @@ library InitializeLib {
     /// @notice Parse data to decode the initialization parameters, check if the passed chainIds[chainIdIndex]
     ///         matches current chainId or is 0 (allow all chains) and return the hashed parameters.
     /// @param data The data to parse, in the following format:
-    ///        abi.encodePacked(uint256 chainIdIndex, uint256 chainIdsLength, uint256[] chainIds, bytes initData)
+    ///        abi.encodePacked(uint256 chainIdIndex,uint256 chainIdsLength,uint256[] chainIds,bytes initData)
     /// @param nexus The Nexus implementation address to be used in the hash
     /// @return _hash The keccak256 hash of the initialization parameters
     /// @return initData The true initialization data, which is the last part of the data

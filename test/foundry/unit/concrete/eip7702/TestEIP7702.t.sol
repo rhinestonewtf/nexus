@@ -578,7 +578,7 @@ contract TestEIP7702 is NexusTest_Base {
         this.hashInitData(packedData3, address(ACCOUNT_IMPLEMENTATION));
     }
 
-    function test_gasComparisonPackedVsAbiEncode() public {
+    function test_gasComparisonPackedVsAbiEncode() public view{
         bytes memory actualInitData = _getInitData();
 
         uint256[] memory chainIds = new uint256[](10);
