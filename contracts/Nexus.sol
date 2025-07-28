@@ -321,7 +321,7 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
                 AccountStorage storage $accountStorage = _getAccountStorage();
                 // Remove the signature  from the initData
                 initData = initData[65:];
-                // Calculate the hash of the initData and trim the chainIdIndex abd chainIds
+                // Calculate the hash of the initData and trim the chainIdIndex and chainIds
                 bytes32 initDataHash;
                 (initDataHash, initData) = initData.hash(_IMPLEMENTATION);
                 // Calculate the digest (excluding chainId and verifying contract as it's implicitly checked)
