@@ -578,7 +578,7 @@ contract TestEIP7702 is NexusTest_Base {
         this.hashInitData(packedData3, address(ACCOUNT_IMPLEMENTATION));
     }
 
-    function test_gasComparisonPackedVsAbiEncode() public view{
+    function test_gasComparisonPackedVsAbiEncode() public {
         bytes memory actualInitData = _getInitData();
 
         uint256[] memory chainIds = new uint256[](10);
@@ -597,12 +597,10 @@ contract TestEIP7702 is NexusTest_Base {
         bytes memory abiEncoded = abi.encode(5, chainIds, actualInitData);
 
         // Verify both produce the same hash
-        uint256 gasBefore = gasleft();
         (bytes32 packedHash,) = this.hashInitData(packedData, address(ACCOUNT_IMPLEMENTATION));
-        uint256 gasAfter = gasBefore - gasleft();
-        gasBefore = gasleft();
+        vm.snapshotGasLastCall("TestEIP7702", "packed hash");
         (bytes32 abiEncodedHash,) = this.hashInitDataAbiEncoded(abiEncoded, address(ACCOUNT_IMPLEMENTATION));
-        gasAfter = gasBefore - gasleft();
+        vm.snapshotGasLastCall("TestEIP7702", "abi encoded hash");
         assertEq(packedHash, abiEncodedHash, "Hashes should match");
 
         // Packed should be more compact
