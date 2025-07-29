@@ -11,6 +11,9 @@ library InitializeLib {
     /// @notice Error thrown when the chain is not supported.
     error UnsupportedChain();
 
+    /// @notice Error thrown when the chain index is out of bounds.
+    error ChainIndexOutOfBounds();
+
     /*//////////////////////////////////////////////////////////////
                                CONSTANTS
     //////////////////////////////////////////////////////////////*/
@@ -24,16 +27,53 @@ library InitializeLib {
 
     /// @notice Parse data to decode the initialization parameters, check if the passed chainIds[chainIdIndex]
     ///         matches current chainId or is 0 (allow all chains) and return the hashed parameters.
-    /// @param data The data to parse, should be abi-encoded as (uint256 chainIdIndex, uint256[] chainIds, bytes initData)
+    /// @param data The data to parse, in the following format:
+    ///        abi.encodePacked(uint256 chainIdIndex,uint256 chainIdsLength,uint256[] chainIds,bytes initData)
     /// @param nexus The Nexus implementation address to be used in the hash
-    function hash(bytes calldata data, address nexus) internal view returns (bytes32 _hash) {
-        // Decode the data
-        (uint256 chainIdIndex, uint256[] memory chainIds, bytes memory initData) = abi.decode(data, (uint256, uint256[], bytes));
+    /// @return _hash The keccak256 hash of the initialization parameters
+    /// @return initData The true initialization data, which is the last part of the data
+    function hash(bytes calldata data, address nexus) internal view returns (bytes32 _hash, bytes calldata initData) {
+        // Init hash
+        bytes32 chainIdsHash;
 
-        // A chain ID of 0 means the account can be initialized on any chain, otherwise, it must match the current chain ID
-        require((chainIds[chainIdIndex] == 0 || chainIds[chainIdIndex] == block.chainid), UnsupportedChain());
+        assembly {
+            // Decode chainIdIndex and chainIdsLength
+            let chainIdIndex := calldataload(data.offset)
+            let chainIdsLength := calldataload(add(data.offset, 0x20))
+
+            // Calculate where chainIds start in calldata
+            let chainIdsStart := add(data.offset, 0x40)
+            let chainIdsSize := mul(chainIdsLength, 0x20)
+
+            // Copy chainIds from calldata to memory
+            let ptr := mload(0x40)
+            calldatacopy(ptr, chainIdsStart, chainIdsSize)
+
+            // Hash chainIds
+            chainIdsHash := keccak256(ptr, chainIdsSize)
+
+            // Set initData to point to the remaining calldata
+            let chainIdsEnd := add(chainIdsStart, chainIdsSize)
+            initData.offset := chainIdsEnd
+            initData.length := sub(add(data.offset, data.length), chainIdsEnd)
+
+            // Validate chainIdIndex is within bounds
+            if iszero(lt(chainIdIndex, chainIdsLength)) {
+                mstore(0x00, 0x28cad507) // ChainIndexOutOfBounds()
+                revert(0x1c, 0x04)
+            }
+
+            // Load the specific chainId at chainIdIndex
+            let selectedChainId := calldataload(add(chainIdsStart, mul(chainIdIndex, 0x20)))
+
+            // Check if selectedChainId is 0 or matches current chainid
+            if iszero(or(iszero(selectedChainId), eq(selectedChainId, chainid()))) {
+                mstore(0x00, 0xd21eab37) // UnsupportedChain()
+                revert(0x1c, 0x04)
+            }
+        }
 
         // Hash the parameters
-        _hash = keccak256(abi.encode(INITIALIZE_TYPEHASH, nexus, keccak256(abi.encodePacked(chainIds)), keccak256(initData)));
+        _hash = keccak256(abi.encode(INITIALIZE_TYPEHASH, nexus, chainIdsHash, keccak256(initData)));
     }
 }
