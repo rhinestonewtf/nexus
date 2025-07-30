@@ -5,9 +5,9 @@ rpcs = [
 # "https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
- # "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+ "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
-# "https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+"https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://polygon-amoy.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
@@ -57,9 +57,9 @@ rpcs = [
 # "https://zora-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
 ]
 
-[deployments.verifier]
+# [deployments.verifier]
 # required to enable verification
-api_key="${ETHERSCAN_API_KEY}"
+# api_key="${ETHERSCAN_API_KEY}"
 # url="https://api.etherscan.io/v2/api?chainid={{chain_id}}"
 
 [deployments.dependencies]
@@ -67,14 +67,13 @@ api_key="${ETHERSCAN_API_KEY}"
 [deployments.singleton.Nexus]
 file = "./artifacts/Nexus/Nexus.json"
 source_file="./artifacts/Nexus/verify.json"
-salt = "0x00000000000000000000000000000000000000006901d55a4c36ef0263232826"
+salt = "0x00000000000000000000000000000000000000009d2d633baf991a02f9a28f8f"
 args_sig = "(address,address,bytes)"
 args = [
 "0x0000000071727De22E5E9d8BAf0edAc6f37da032", # entryPoint 
 "0x0000000000E9E6E96Bcaa3c113187CdB7E38AED9", # default validator
 "0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000061e8ac0a758afeefbd556f713ecf0a8cbd00288f" # initData
 ]
-# 0x78dab2924751921722e289b8176f054a43da123c507de028d7efe5c58cbcf6b8
 
 [deployments.singleton.NexusBootstrap]
 file = "./artifacts/NexusBootstrap/NexusBootstrap.json"
@@ -94,5 +93,4 @@ args = [
 "$Nexus", # implementation
 "0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # owner
 ]
-salt = "0x00000000000000000000000000000000000000002d4b5e06fbaa7e0388a8374b"
-# 0x954c4a19cf19d59423d9fe417f54c4dfca4aad127a0d089aedbe7e60c2631bf5
+salt = "0x00000000000000000000000000000000000000007ff34a104019e502eb4d2cd2"
