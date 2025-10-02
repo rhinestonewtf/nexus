@@ -62,6 +62,9 @@ abstract contract ModuleManager is Storage, EIP712, IModuleManager, RegistryAdap
     /// @notice To explicitly initialize the default validator, Nexus.execute(_DEFAULT_VALIDATOR.onInstall(...)) should be called.
     address internal immutable _DEFAULT_VALIDATOR;
 
+    // Native token receipt event
+    event ReceivedNative(address indexed sender, uint256 value);
+
     /// @dev initData should block the implementation from being used as a Smart Account
     constructor(address defaultValidator, bytes memory initData) {
         if (!IValidator(defaultValidator).isModuleType(MODULE_TYPE_VALIDATOR)) {
@@ -91,7 +94,9 @@ abstract contract ModuleManager is Storage, EIP712, IModuleManager, RegistryAdap
     }
 
     // receive function
-    receive() external payable { }
+    receive() external payable {
+        emit ReceivedNative(msg.sender, msg.value);
+    }
 
     /// @dev Fallback function to manage incoming calls using designated handlers based on the call type.
     /// Hooked manually in the _fallback function
