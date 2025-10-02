@@ -5,15 +5,15 @@ rpcs = [
 # "https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://opt-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
-#  "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
-# "https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+ "https://base-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+"https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 "https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
-# "https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+"https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://polygon-amoy.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://zksync-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://zksync-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
-# "https://gnosis-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
+"https://gnosis-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://bnb-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://bnb-testnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://avax-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
@@ -55,6 +55,7 @@ rpcs = [
 # "https://unichain-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://zora-mainnet.g.alchemy.com/v2/${ALCHEMY_API_KEY}",
 # "https://zora-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+# "https://rpc.hyperliquid.xyz/evm"
 ]
 
 # [deployments.verifier]
@@ -71,8 +72,8 @@ salt = "0x000000000000000000000000000000000000000078ea928216606e0099bf3fc3"
 args_sig = "(address,address,bytes)"
 args = [
 "0x0000000071727De22E5E9d8BAf0edAc6f37da032", # entryPoint 
-"0x000000000013fdB5234E4E3162a810F54d9f7E98", # default validator
-"0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000061e8ac0a758afeefbd556f713ecf0a8cbd00288f" # initData
+"0x0000000031ef4155C978d48a8A7d4EDba03b04fE", # default validator
+"0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # initData
 ]
 
 [deployments.singleton.NexusBootstrap]
@@ -81,16 +82,16 @@ source_file="./artifacts/NexusBootstrap/verify.json"
 salt = "0x00000000000000000000000000000000000000002ebcb8ca3604cc00120261bc"
 args_sig = "(address,bytes)"
 args = [
-"0x000000000013fdB5234E4E3162a810F54d9f7E98", # default validator
-"0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000061e8ac0a758afeefbd556f713ecf0a8cbd00288f" # initData
+"0x0000000031ef4155C978d48a8A7d4EDba03b04fE", # default validator
+"0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # initData
 ]
 
-[deployments.singleton.NexusAccountFactory]
-file = "./artifacts/NexusAccountFactory/NexusAccountFactory.json"
-source_file="./artifacts/NexusAccountFactory/verify.json"
-args_sig = "(address,address)"
-args = [
-"$Nexus", # implementation
-"0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # owner
-]
-salt = "0x00000000000000000000000000000000000000009484a25321b64b02c0046a51"
+# [deployments.singleton.NexusAccountFactory]
+# file = "./artifacts/NexusAccountFactory/NexusAccountFactory.json"
+# source_file="./artifacts/NexusAccountFactory/verify.json"
+# args_sig = "(address,address)"
+# args = [
+# "$Nexus", # implementation
+# "0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # owner
+# ]
+# salt = "0x00000000000000000000000000000000000000009484a25321b64b02c0046a51"
