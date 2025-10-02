@@ -76,15 +76,15 @@ args = [
 "0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # initData
 ]
 
-[deployments.singleton.NexusBootstrap]
-file = "./artifacts/NexusBootstrap/NexusBootstrap.json"
-source_file="./artifacts/NexusBootstrap/verify.json"
-salt = "0x00000000000000000000000000000000000000002ebcb8ca3604cc00120261bc"
-args_sig = "(address,bytes)"
-args = [
-"0x0000000031ef4155C978d48a8A7d4EDba03b04fE", # default validator
-"0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # initData
-]
+# [deployments.singleton.NexusBootstrap]
+# file = "./artifacts/NexusBootstrap/NexusBootstrap.json"
+# source_file="./artifacts/NexusBootstrap/verify.json"
+# salt = "0x00000000000000000000000000000000000000002ebcb8ca3604cc00120261bc"
+# args_sig = "(address,bytes)"
+# args = [
+# "0x0000000031ef4155C978d48a8A7d4EDba03b04fE", # default validator
+# "0x61e8AC0a758AfEEFBD556f713ecF0A8cbd00288f" # initData
+# ]
 
 # [deployments.singleton.NexusAccountFactory]
 # file = "./artifacts/NexusAccountFactory/NexusAccountFactory.json"
