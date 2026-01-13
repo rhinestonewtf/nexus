@@ -43,6 +43,6 @@ library ProxyLib {
             keccak256(abi.encodePacked(type(NexusProxy).creationCode, abi.encode(implementation, abi.encodeCall(INexus.initializeAccount, initData))));
 
         // Compute the predicted address
-        predictedAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, initCodeHash))))));
+        predictedAddress = payable(address(uint160(uint256(keccak256(abi.encodePacked(bytes1(0x41), address(this), salt, initCodeHash))))));
     }
 }
