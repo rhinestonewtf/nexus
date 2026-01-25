@@ -1,6 +1,8 @@
 
 # Rhinestone Nexus
 
+**Version 1.2.0**
+
 A modular smart account optimized for chain abstraction and multi-chain use with [Rhinestone Intents](https://docs.rhinestone.dev/home/introduction/rhinestone-intents).
 
 > This is a fork of [Biconomy's Nexus](https://github.com/bcnmy/nexus), a modular smart account built off the foundational work of ERC-7579 and the [ERC-7579 reference implementation](https://github.com/erc7579/erc7579-implementation). We extend our thanks to the Biconomy team in partnering with us to build the foundations of ERC-7579.
@@ -14,7 +16,7 @@ Rhinestone Nexus is an [ERC-7579](https://eips.ethereum.org/EIPS/eip-7579) compl
 **Chain Abstraction Ready**
 - Multi-chain aware initialization with chain ID verification
 - EIP-712 TypedData signing for cross-chain initialize transactions
-- Designed for use with Rhinestone Orchestrator for intent execution
+- Designed for use with Rhinestone Intents for cross-chain execution
 
 **EIP-7702 Native Support**
 - Full support for [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702) accounts
@@ -29,7 +31,10 @@ Rhinestone Nexus is an [ERC-7579](https://eips.ethereum.org/EIPS/eip-7579) compl
 **Enhanced Module System**
 - Pre-validation hooks for ERC-4337 and ERC-1271
 - Emergency hook uninstall mechanism with timelock protection
-- ERC-7484 module registry integration for attested module verification
+
+## Deployments
+
+Rhinestone Nexus is deployed on multiple chains. See the [Rhinestone documentation](https://docs.rhinestone.dev) for the latest deployment addresses.
 
 ## Getting Started
 
@@ -106,15 +111,25 @@ yarn lint:fix
 yarn check
 ```
 
-## Security Audits
+## Security
+
+### Audits
 
 | Auditor          | Date       | Report |
 | ---------------- | ---------- | ------ |
-| CodeHawks-Cyfrin | 09-2024    | [View Report](./audits/CodeHawks-Cyfrin-17-09-2024.pdf) |
-| Spearbit         | 10/11-2024 | [View Report](./audits/report-cantinacode-biconomy-0708-final.pdf) / [ERC-7739 Add-on](./audits/report-cantinacode-biconomy-erc7739-addon-final.pdf) |
+| CodeHawks-Cyfrin | 09-2024    | [View Report](./audits/CodeHawks-Cyfrin-Competition-170924.pdf) |
+| Spearbit         | 10/11-2024 | [View Report](./audits/report-cantinacode-biconomy-0708-updated.pdf) / [ERC-7739 Add-on](./audits/report-cantinacode-biconomy-erc7739-addon-final.pdf) |
 | Zenith           | 03-2025    | [View Report](./audits/Biconomy-Nexus_Zenith-Audit-Report.pdf) |
 | Pashov           | 03-2025    | [View Report](./audits/Nexus-Pashov-Review_2025-03.pdf) |
-| ChainLight       | 01-2026    | [View Report](./audits/[ChainLight]%20Rhinestone%20Nexus%20Security%20Audit%20v1.0.pdf) |
+| ChainLight       | 01-2025    | [View Report](./audits/[ChainLight]%20Rhinestone%20Nexus%20Security%20Audit%20v1.0.pdf) |
+
+### Reporting Vulnerabilities
+
+To report security vulnerabilities, please email security@rhinestone.wtf or reach out via [Telegram](https://t.me/kurt_larsen).
+
+## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
 ## License
 
@@ -122,4 +137,4 @@ This project is licensed under the MIT License. See the [LICENSE](./LICENSE) fil
 
 ## Connect with Rhinestone
 
-[![Website](https://img.shields.io/badge/Website-7C3AED?style=for-the-badge&logoColor=white)](https://rhinestone.dev) [![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/rhinestonewtf) [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/rhinestonewtf) [![Documentation](https://img.shields.io/badge/Docs-7C3AED?style=for-the-badge&logoColor=white)](https://docs.rhinestone.wtf)
+[![Website](https://img.shields.io/badge/Website-7C3AED?style=for-the-badge&logoColor=white)](https://rhinestone.dev) [![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/rhinestonewtf) [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/rhinestonewtf) [![Documentation](https://img.shields.io/badge/Docs-7C3AED?style=for-the-badge&logoColor=white)](https://docs.rhinestone.dev)
