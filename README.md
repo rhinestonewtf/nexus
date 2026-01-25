@@ -1,14 +1,13 @@
-[![Rhinestone](https://img.shields.io/badge/Built_by-Rhinestone-7C3AED?style=flat)](https://rhinestone.wtf) [![License MIT](https://img.shields.io/badge/License-MIT-blue?&style=flat)](./LICENSE) [![Foundry](https://img.shields.io/badge/Built%20with-Foundry-FFBD10.svg)](https://getfoundry.sh/) [![Hardhat](https://img.shields.io/badge/Built%20with-Hardhat-FFDB1C.svg)](https://hardhat.org/)
 
 # Rhinestone Nexus
 
-A modular smart account optimized for chain abstraction and multi-chain use with [Rhinestone Orchestrator](https://docs.rhinestone.wtf/orchestrator).
+A modular smart account optimized for chain abstraction and multi-chain use with [Rhinestone Intents](https://docs.rhinestone.dev/home/introduction/rhinestone-intents).
 
-> This is a fork of [Biconomy's Nexus](https://github.com/bcnmy/nexus), an ERC-7579 modular smart account. We extend our thanks to the Biconomy team for their foundational work.
+> This is a fork of [Biconomy's Nexus](https://github.com/bcnmy/nexus), a modular smart account built off the foundational work of ERC-7579 and the [ERC-7579 referenvce implementation](https://github.com/erc7579/erc7579-implementation). We extend our thanks to the Biconomy team in partnering with us to build the foundations of ERC-7579.
 
 ## Overview
 
-Rhinestone Nexus is an [ERC-7579](https://eips.ethereum.org/EIPS/eip-7579) compliant modular smart account designed for seamless cross-chain operations. Built on top of the battle-tested Biconomy Nexus architecture, this fork adds features specifically designed to work with Rhinestone's intent-based infrastructure.
+Rhinestone Nexus is an [ERC-7579](https://eips.ethereum.org/EIPS/eip-7579) compliant modular smart account designed for seamless cross-chain operations. Built on top of the battle-tested and heavily audited Biconomy Nexus, this fork adds features specifically designed to work with Rhinestone's intent-based infrastructure.
 
 ### Key Features
 
@@ -115,7 +114,7 @@ yarn check
 | Spearbit         | 10/11-2024 | [View Report](./audits/report-cantinacode-biconomy-0708-final.pdf) / [ERC-7739 Add-on](./audits/report-cantinacode-biconomy-erc7739-addon-final.pdf) |
 | Zenith           | 03-2025    | [View Report](./audits/Biconomy-Nexus_Zenith-Audit-Report.pdf) |
 | Pashov           | 03-2025    | [View Report](./audits/Nexus-Pashov-Review_2025-03.pdf) |
-| ChainLight       | 01-2025    | [View Report](./audits/[ChainLight]%20Rhinestone%20Nexus%20Security%20Audit%20v1.0.pdf) |
+| ChainLight       | 01-2026    | [View Report](./audits/[ChainLight]%20Rhinestone%20Nexus%20Security%20Audit%20v1.0.pdf) |
 
 ## License
 
