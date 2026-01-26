@@ -9,7 +9,7 @@ A modular smart account optimized for chain abstraction and multi-chain use with
 
 ## Overview
 
-Rhinestone Nexus is an [ERC-7579](https://eips.ethereum.org/EIPS/eip-7579) compliant modular smart account designed for seamless cross-chain operations. Built on top of the battle-tested and heavily audited Biconomy Nexus, this fork adds features specifically designed to work with Rhinestone's intent-based infrastructure.
+Rhinestone Nexus is an [ERC-7579](https://eips.ethereum.org/EIPS/eip-7579) compliant modular smart account designed for seamless cross-chain operations. Built on top of the battle-tested and heavily audited Biconomy Nexus, this fork is optimized to work seamlessly with Rhinestone's intent-based infrastructure.
 
 ### Key Features
 
