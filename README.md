@@ -121,7 +121,7 @@ yarn check
 | Spearbit         | 10/11-2024 | [View Report](./audits/report-cantinacode-biconomy-0708-updated.pdf) / [ERC-7739 Add-on](./audits/report-cantinacode-biconomy-erc7739-addon-final.pdf) |
 | Zenith           | 03-2025    | [View Report](./audits/Biconomy-Nexus_Zenith-Audit-Report.pdf) |
 | Pashov           | 03-2025    | [View Report](./audits/Nexus-Pashov-Review_2025-03.pdf) |
-| ChainLight       | 01-2025    | [View Report](./audits/[ChainLight]%20Rhinestone%20Nexus%20Security%20Audit%20v1.0.pdf) |
+| ChainLight       | 07-2025    | [View Report](./audits/[ChainLight]%20Rhinestone%20Nexus%20Security%20Audit%20v1.0.pdf) |
 
 ### Reporting Vulnerabilities
 
