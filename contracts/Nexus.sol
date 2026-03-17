@@ -251,7 +251,7 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
     /// @param module The address of the module to uninstall.
     /// @param deInitData De-initialization data for the module.
     /// @dev Ensures that the operation is authorized and valid before proceeding with the uninstallation.
-    function uninstallModule(uint256 moduleTypeId, address module, bytes calldata deInitData) external payable onlyEntryPointOrSelf withHook {
+    function uninstallModule(uint256 moduleTypeId, address module, bytes calldata deInitData) external payable virtual onlyEntryPointOrSelf withHook {
         require(_isModuleInstalled(moduleTypeId, module, deInitData), ModuleNotInstalled(moduleTypeId, module));
 
         if (moduleTypeId == MODULE_TYPE_VALIDATOR) {
