@@ -185,7 +185,7 @@ abstract contract ModuleManager is Storage, EIP712, IModuleManager, RegistryAdap
     /// @dev This function goes through hook checks via withHook modifier.
     /// @dev No need to check that the module is already installed, as this check is done
     /// when trying to sstore the module in an appropriate SentinelList
-    function _installModule(uint256 moduleTypeId, address module, bytes calldata initData) internal {
+    function _installModule(uint256 moduleTypeId, address module, bytes calldata initData) internal virtual {
         if (!_areSentinelListsInitialized()) {
             _initSentinelLists();
         }
@@ -616,7 +616,7 @@ abstract contract ModuleManager is Storage, EIP712, IModuleManager, RegistryAdap
         }
     }
 
-    function _fallback(bytes calldata callData) private {
+    function _fallback(bytes calldata callData) internal virtual {
         bool success;
         bytes memory result;
         FallbackHandler storage $fallbackHandler = _getAccountStorage().fallbacks[msg.sig];
