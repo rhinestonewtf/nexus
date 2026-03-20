@@ -65,7 +65,7 @@ contract TestGas_NexusAccountFactory is TestModuleManagement_Base {
         BootstrapConfig memory hook = BootstrapLib.createSingleConfig(address(0), "");
         return abi.encode(
             address(BOOTSTRAPPER),
-            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, (validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
+            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, ("", validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
         );
     }
 

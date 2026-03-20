@@ -27,7 +27,7 @@ contract TestFuzz_AccountFactory_Deployment is NexusTest_Base {
         BootstrapConfig memory hook = BootstrapLib.createSingleConfig(address(0), "");
         bytes memory _initData = abi.encode(
             address(BOOTSTRAPPER),
-            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, (validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
+            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, ("", validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
         );
 
         bytes32 salt = keccak256(abi.encodePacked(randomSeed));
@@ -54,7 +54,7 @@ contract TestFuzz_AccountFactory_Deployment is NexusTest_Base {
         BootstrapConfig memory hook = BootstrapLib.createSingleConfig(address(0), "");
         bytes memory _initData = abi.encode(
             address(BOOTSTRAPPER),
-            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, (validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
+            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, ("", validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
         );
 
         bytes32 salt = keccak256(abi.encodePacked(largeIndex));
@@ -81,7 +81,7 @@ contract TestFuzz_AccountFactory_Deployment is NexusTest_Base {
         BootstrapConfig memory hook = BootstrapLib.createSingleConfig(address(0), "");
         bytes memory _initData = abi.encode(
             address(BOOTSTRAPPER),
-            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, (validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
+            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, ("", validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
         );
         bytes32 salt = keccak256(abi.encodePacked(randomSeed));
         address payable expectedAddress = FACTORY.computeAccountAddress(_initData, salt);

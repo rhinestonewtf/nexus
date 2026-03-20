@@ -62,18 +62,34 @@ abstract contract ModuleManager is Storage, EIP712, IModuleManager, RegistryAdap
     /// @notice To explicitly initialize the default validator, Nexus.execute(_DEFAULT_VALIDATOR.onInstall(...)) should be called.
     address internal immutable _DEFAULT_VALIDATOR;
 
+    /// @dev The default executor address. If set to address(0), no default executor is used.
+    address internal immutable _DEFAULT_EXECUTOR;
+
     /// @dev initData should block the implementation from being used as a Smart Account
-    constructor(address defaultValidator, bytes memory initData) {
+    constructor(address defaultValidator, address defaultExecutor, bytes memory validatorInitData, bytes memory executorInitData) {
         if (!IValidator(defaultValidator).isModuleType(MODULE_TYPE_VALIDATOR)) {
             revert MismatchModuleTypeId();
         }
-        IValidator(defaultValidator).onInstall(initData);
+        if (defaultExecutor != address(0)) {
+            if (!IExecutor(defaultExecutor).isModuleType(MODULE_TYPE_EXECUTOR)) {
+                revert MismatchModuleTypeId();
+            }
+        }
+        IValidator(defaultValidator).onInstall(validatorInitData);
+        if (defaultExecutor != address(0)) {
+            IExecutor(defaultExecutor).onInstall(executorInitData);
+        }
         _DEFAULT_VALIDATOR = defaultValidator;
+        _DEFAULT_EXECUTOR = defaultExecutor;
     }
 
-    /// @notice Ensures the message sender is a registered executor module.
+    /// @notice Ensures the message sender is a registered executor module or the default executor.
     modifier onlyExecutorModule() virtual {
-        require(_getAccountStorage().executors.contains(msg.sender), InvalidModule(msg.sender));
+        address sender = msg.sender;
+        require(
+            (_DEFAULT_EXECUTOR != address(0) && sender == _DEFAULT_EXECUTOR) || _getAccountStorage().executors.contains(sender),
+            InvalidModule(sender)
+        );
         _;
     }
 
@@ -577,7 +593,7 @@ abstract contract ModuleManager is Storage, EIP712, IModuleManager, RegistryAdap
     /// @param executor The address of the executor to check.
     /// @return True if the executor is installed, otherwise false.
     function _isExecutorInstalled(address executor) internal view virtual returns (bool) {
-        return _getAccountStorage().executors.contains(executor);
+        return (_DEFAULT_EXECUTOR != address(0) && executor == _DEFAULT_EXECUTOR) || _getAccountStorage().executors.contains(executor);
     }
 
     /// @dev Checks if a hook is currently installed.
