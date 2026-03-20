@@ -151,7 +151,7 @@ contract TestNexusAccountFactory_Deployments is NexusTest_Base {
         bytes memory _initDataInvalidModule = abi.encode(
             address(BOOTSTRAPPER),
             abi.encodeCall(
-                BOOTSTRAPPER.initNexusScoped, (validatorsInvalid, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD }))
+                BOOTSTRAPPER.initNexusScoped, ("", validatorsInvalid, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD }))
             )
         );
 
@@ -182,7 +182,7 @@ contract TestNexusAccountFactory_Deployments is NexusTest_Base {
         vm.expectRevert(EntryPointCanNotBeZero.selector);
 
         // Try deploying the Nexus contract with an entry point address of zero
-        new Nexus(zeroAddress, address(DEFAULT_VALIDATOR_MODULE), abi.encodePacked(address(0xeEeEeEeE)));
+        new Nexus(zeroAddress, address(DEFAULT_VALIDATOR_MODULE), address(0), abi.encodePacked(address(0xeEeEeEeE)), "");
     }
 
     /// @notice Tests BootstrapLib.createArrayConfig function for multiple modules and data in BootstrapLib and uses it to deploy an account.
@@ -283,7 +283,7 @@ contract TestNexusAccountFactory_Deployments is NexusTest_Base {
     function _getInitData(BootstrapConfig[] memory validators, BootstrapConfig memory hook) internal view returns (bytes memory) {
         return abi.encode(
             address(BOOTSTRAPPER),
-            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, (validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
+            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, ("", validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
         );
     }
 }

@@ -81,7 +81,7 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
     event EmergencyHookUninstallRequestReset(address hook, uint256 timestamp);
 
     /// @notice Initializes the smart account with the specified entry point.
-    constructor(address anEntryPoint, address defaultValidator, bytes memory initData) ModuleManager(defaultValidator, initData) {
+    constructor(address anEntryPoint, address defaultValidator, address defaultExecutor, bytes memory validatorInitData, bytes memory executorInitData) ModuleManager(defaultValidator, defaultExecutor, validatorInitData, executorInitData) {
         require(address(anEntryPoint) != address(0), EntryPointCanNotBeZero());
         _ENTRYPOINT = anEntryPoint;
         _IMPLEMENTATION = address(this);

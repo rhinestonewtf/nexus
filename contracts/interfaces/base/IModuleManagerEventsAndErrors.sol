@@ -108,4 +108,5 @@ interface IModuleManagerEventsAndErrors {
 
     /// @notice Error thrown when the default validator is already installed.
     error DefaultValidatorAlreadyInstalled();
+
 }

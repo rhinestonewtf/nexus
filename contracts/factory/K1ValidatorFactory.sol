@@ -77,7 +77,7 @@ contract K1ValidatorFactory is Stakeable {
             address(BOOTSTRAPPER),
             abi.encodeCall(
                 BOOTSTRAPPER.initNexusWithSingleValidator,
-                (K1_VALIDATOR, abi.encodePacked(eoaOwner), RegistryConfig({ registry: REGISTRY, attesters: attesters, threshold: threshold }))
+                (K1_VALIDATOR, abi.encodePacked(eoaOwner), "", RegistryConfig({ registry: REGISTRY, attesters: attesters, threshold: threshold }))
             )
         );
 
@@ -113,7 +113,7 @@ contract K1ValidatorFactory is Stakeable {
             address(BOOTSTRAPPER),
             abi.encodeCall(
                 BOOTSTRAPPER.initNexusWithSingleValidator,
-                (K1_VALIDATOR, abi.encodePacked(eoaOwner), RegistryConfig({ registry: REGISTRY, attesters: attesters, threshold: threshold }))
+                (K1_VALIDATOR, abi.encodePacked(eoaOwner), "", RegistryConfig({ registry: REGISTRY, attesters: attesters, threshold: threshold }))
             )
         );
 

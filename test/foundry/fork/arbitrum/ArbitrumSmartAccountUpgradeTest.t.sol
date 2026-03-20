@@ -28,7 +28,7 @@ contract ArbitrumSmartAccountUpgradeTest is NexusTest_Base, ArbitrumSettings {
         smartAccountV2 = IBiconomySmartAccountV2(SMART_ACCOUNT_V2_ADDRESS);
         ENTRYPOINT_V_0_6 = IEntryPointV_0_6(ENTRYPOINT_ADDRESS);
         ENTRYPOINT_V_0_7 = ENTRYPOINT;
-        newImplementation = new Nexus(_ENTRYPOINT, address(DEFAULT_VALIDATOR_MODULE), abi.encodePacked(address(0xeEeEeEeE)));
+        newImplementation = new Nexus(_ENTRYPOINT, address(DEFAULT_VALIDATOR_MODULE), address(0), abi.encodePacked(address(0xeEeEeEeE)), "");
         // /!\ The private key is for testing purposes only and should not be used in production.
         signerPrivateKey = 0x2924d554c046e633f658427df4d0e7726487b1322bd16caaf24a53099f1cda85;
         signer = vm.createWallet(signerPrivateKey);
@@ -118,7 +118,7 @@ contract ArbitrumSmartAccountUpgradeTest is NexusTest_Base, ArbitrumSettings {
         // Create initcode and salt to be sent to Factory
         bytes memory _initData = abi.encode(
             address(BOOTSTRAPPER),
-            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, (validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
+            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, ("", validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
         );
 
         dest[1] = address(smartAccountV2);

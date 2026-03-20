@@ -42,7 +42,7 @@ contract TestPREP is NexusTest_Base {
             address(BOOTSTRAPPER),
             abi.encodeCall(
                 BOOTSTRAPPER.initNexus,
-                (validators, executors, hook, fallbacks, preValidationHooks, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD }))
+                ("", validators, executors, hook, fallbacks, preValidationHooks, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD }))
             )
         );
     }
@@ -94,7 +94,7 @@ contract TestPREP is NexusTest_Base {
         valueToSet = bound(valueToSet, 0, 77e18);
         bytes memory setValueOnTarget = abi.encodeCall(MockTarget.setValue, valueToSet);
 
-        bytes memory initData = abi.encodeWithSelector(NexusBootstrap.initNexusWithDefaultValidator.selector, abi.encodePacked(BOB_ADDRESS));
+        bytes memory initData = abi.encodeWithSelector(NexusBootstrap.initNexusWithDefaultValidator.selector, abi.encodePacked(BOB_ADDRESS), "");
         initData = abi.encode(address(BOOTSTRAPPER), initData);
         bytes32 initDataHash = keccak256(abi.encodePacked(initData));
 

@@ -115,7 +115,7 @@ contract TestHelper is CheatCodes, EventsAndErrors {
         setupEntrypoint();
         DEFAULT_VALIDATOR_MODULE = new K1Validator();
         // This is the implementation of the account => default module initialized with an unusable configuration
-        ACCOUNT_IMPLEMENTATION = new Nexus(address(ENTRYPOINT), address(DEFAULT_VALIDATOR_MODULE), abi.encodePacked(address(0xeEeEeEeE)));
+        ACCOUNT_IMPLEMENTATION = new Nexus(address(ENTRYPOINT), address(DEFAULT_VALIDATOR_MODULE), address(0), abi.encodePacked(address(0xeEeEeEeE)), "");
         FACTORY = new NexusAccountFactory(address(ACCOUNT_IMPLEMENTATION), address(FACTORY_OWNER.addr));
         META_FACTORY = new BiconomyMetaFactory(address(FACTORY_OWNER.addr));
         vm.prank(FACTORY_OWNER.addr);
@@ -125,7 +125,7 @@ contract TestHelper is CheatCodes, EventsAndErrors {
         EXECUTOR_MODULE = new MockExecutor();
         VALIDATOR_MODULE = new MockValidator();
         MULTI_MODULE = new MockMultiModule();
-        BOOTSTRAPPER = new NexusBootstrap(address(DEFAULT_VALIDATOR_MODULE), abi.encodePacked(address(0xa11ce)));
+        BOOTSTRAPPER = new NexusBootstrap(address(DEFAULT_VALIDATOR_MODULE), address(0), abi.encodePacked(address(0xa11ce)), "");
         REGISTRY = new MockRegistry();
     }
 
@@ -199,7 +199,7 @@ contract TestHelper is CheatCodes, EventsAndErrors {
         // Create initcode and salt to be sent to Factory
         bytes memory _initData = abi.encode(
             address(BOOTSTRAPPER),
-            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, (validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
+            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, ("", validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
         );
         bytes32 salt = keccak256(saDeploymentIndex);
 
@@ -222,7 +222,7 @@ contract TestHelper is CheatCodes, EventsAndErrors {
         // Create initcode and salt to be sent to Factory
         bytes memory _initData = abi.encode(
             address(BOOTSTRAPPER),
-            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, (validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
+            abi.encodeCall(BOOTSTRAPPER.initNexusScoped, ("", validators, hook, RegistryConfig({ registry: REGISTRY, attesters: ATTESTERS, threshold: THRESHOLD })))
         );
 
         bytes32 salt = keccak256(saDeploymentIndex);
