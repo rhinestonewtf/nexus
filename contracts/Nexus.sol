@@ -385,6 +385,10 @@ contract Nexus is INexus, BaseAccount, ExecutionHelper, ModuleManager, UUPSUpgra
                 return checkERC7739Support(hash, signature);
             }
         }
+        // Return failure value for signatures too short to contain validator address
+        if (signature.length < 20) {
+            return bytes4(0xffffffff);
+        }
         // else proceed with normal signature verification
         // First 20 bytes of data will be validator address and rest of the bytes is complete signature.
         address validator = _handleValidator(address(bytes20(signature[0:20])));
