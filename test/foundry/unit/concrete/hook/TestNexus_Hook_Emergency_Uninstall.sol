@@ -7,6 +7,7 @@ import { MockSimpleValidator } from "../../../../../contracts/mocks/MockSimpleVa
 import { MockPreValidationHook } from "../../../../../contracts/mocks/MockPreValidationHook.sol";
 import { EMERGENCY_UNINSTALL_TYPE_HASH } from "../../../../../contracts/types/Constants.sol";
 import { EmergencyUninstall } from "../../../../../contracts/types/DataTypes.sol";
+import { IModuleManagerEventsAndErrors } from "../../../../../contracts/interfaces/base/IModuleManagerEventsAndErrors.sol";
 
 /// @title TestNexus_Hook_Uninstall
 /// @notice Tests for handling hooks emergency uninstall
@@ -339,6 +340,46 @@ contract TestNexus_Hook_Emergency_Uninstall is TestModuleManagement_Base {
         assertTrue(BOB_ACCOUNT.isModuleInstalled(MODULE_TYPE_HOOK, address(HOOK_MODULE), ""));
     }
 
+    function test_EmergencyUninstallHook_DirectCall_Fail_Replay() public {
+        // 1. Install the hook
+        assertFalse(BOB_ACCOUNT.isModuleInstalled(MODULE_TYPE_HOOK, address(HOOK_MODULE), ""));
+        bytes memory callData = abi.encodeWithSelector(IModuleManager.installModule.selector, MODULE_TYPE_HOOK, address(HOOK_MODULE), "");
+        installModule(callData, MODULE_TYPE_HOOK, address(HOOK_MODULE), EXECTYPE_DEFAULT);
+        assertTrue(BOB_ACCOUNT.isModuleInstalled(MODULE_TYPE_HOOK, address(HOOK_MODULE), ""));
+
+        // 2. Sign the emergency uninstall request
+        EmergencyUninstall memory emergencyUninstall = EmergencyUninstall({
+            hook: address(HOOK_MODULE),
+            hookType: MODULE_TYPE_HOOK,
+            deInitData: "",
+            nonce: 0
+        });
+
+        bytes32 hash = _hashTypedData(
+            keccak256(
+                abi.encode(
+                    EMERGENCY_UNINSTALL_TYPE_HASH,
+                    emergencyUninstall.hook,
+                    emergencyUninstall.hookType,
+                    keccak256(emergencyUninstall.deInitData),
+                    emergencyUninstall.nonce
+                )
+            ),
+            address(BOB_ACCOUNT)
+        );
+
+        bytes memory signature = abi.encodePacked(address(SIMPLE_VALIDATOR_MODULE), sign(BOB, hash));
+
+        // 3. First call succeeds
+        vm.prank(address(BOB_ACCOUNT));
+        BOB_ACCOUNT.emergencyUninstallHook(emergencyUninstall, signature);
+
+        // 4. Replay the exact same request
+        vm.prank(address(BOB_ACCOUNT));
+        vm.expectRevert(IModuleManagerEventsAndErrors.InvalidNonce.selector);
+        BOB_ACCOUNT.emergencyUninstallHook(emergencyUninstall, signature);
+    }
+
     function test_EmergencyUninstallHook_DirectCall_Fail_WrongSigner() public {
         // 1. Install the hook
         assertFalse(BOB_ACCOUNT.isModuleInstalled(MODULE_TYPE_HOOK, address(HOOK_MODULE), ""));
@@ -411,6 +452,51 @@ contract TestNexus_Hook_Emergency_Uninstall is TestModuleManagement_Base {
         assertTrue(BOB_ACCOUNT.isModuleInstalled(MODULE_TYPE_PREVALIDATION_HOOK_ERC1271, address(preValidationHook), ""));
     }
 
+    function test_EmergencyUninstallHook_1271_DirectCall_Fail_Replay() public {
+        MockPreValidationHook preValidationHook = new MockPreValidationHook();
+
+        bytes memory callData = abi.encodeWithSelector(
+            IModuleManager.installModule.selector,
+            MODULE_TYPE_PREVALIDATION_HOOK_ERC1271,
+            address(preValidationHook),
+            ""
+        );
+
+        installModule(callData, MODULE_TYPE_PREVALIDATION_HOOK_ERC1271, address(preValidationHook), EXECTYPE_DEFAULT);
+
+        EmergencyUninstall memory emergencyUninstall = EmergencyUninstall({
+            hook: address(preValidationHook),
+            hookType: MODULE_TYPE_PREVALIDATION_HOOK_ERC1271,
+            deInitData: "",
+            nonce: 0
+        });
+
+        bytes32 hash = _hashTypedData(
+            keccak256(
+                abi.encode(
+                    EMERGENCY_UNINSTALL_TYPE_HASH,
+                    emergencyUninstall.hook,
+                    emergencyUninstall.hookType,
+                    keccak256(emergencyUninstall.deInitData),
+                    emergencyUninstall.nonce
+                )
+            ),
+            address(BOB_ACCOUNT)
+        );
+
+        bytes memory signature = abi.encodePacked(address(SIMPLE_VALIDATOR_MODULE), sign(BOB, hash));
+
+        vm.prank(address(BOB_ACCOUNT));
+
+        // First call succeeds and consumes nonce 0.
+        BOB_ACCOUNT.emergencyUninstallHook(emergencyUninstall, signature);
+
+        // Replay the exact same request.
+        vm.prank(address(BOB_ACCOUNT));
+        vm.expectRevert(IModuleManagerEventsAndErrors.InvalidNonce.selector);
+        BOB_ACCOUNT.emergencyUninstallHook(emergencyUninstall, signature);
+    }
+
     function test_EmergencyUninstallHook_4337_DirectCall_Success() public {
         // 1. Install the 4337 hook
         MockPreValidationHook preValidationHook = new MockPreValidationHook();
@@ -446,6 +532,51 @@ contract TestNexus_Hook_Emergency_Uninstall is TestModuleManagement_Base {
         BOB_ACCOUNT.emergencyUninstallHook(emergencyUninstall, signature);
 
         assertTrue(BOB_ACCOUNT.isModuleInstalled(MODULE_TYPE_PREVALIDATION_HOOK_ERC4337, address(preValidationHook), ""));
+    }
+
+    function test_EmergencyUninstallHook_4337_DirectCall_Fail_Replay() public {
+        MockPreValidationHook preValidationHook = new MockPreValidationHook();
+
+        bytes memory callData = abi.encodeWithSelector(
+            IModuleManager.installModule.selector,
+            MODULE_TYPE_PREVALIDATION_HOOK_ERC4337,
+            address(preValidationHook),
+            ""
+        );
+
+        installModule(callData, MODULE_TYPE_PREVALIDATION_HOOK_ERC4337, address(preValidationHook), EXECTYPE_DEFAULT);
+
+        EmergencyUninstall memory emergencyUninstall = EmergencyUninstall({
+            hook: address(preValidationHook),
+            hookType: MODULE_TYPE_PREVALIDATION_HOOK_ERC4337,
+            deInitData: "",
+            nonce: 0
+        });
+
+        bytes32 hash = _hashTypedData(
+            keccak256(
+                abi.encode(
+                    EMERGENCY_UNINSTALL_TYPE_HASH,
+                    emergencyUninstall.hook,
+                    emergencyUninstall.hookType,
+                    keccak256(emergencyUninstall.deInitData),
+                    emergencyUninstall.nonce
+                )
+            ),
+            address(BOB_ACCOUNT)
+        );
+
+        bytes memory signature = abi.encodePacked(address(SIMPLE_VALIDATOR_MODULE), sign(BOB, hash));
+
+        vm.prank(address(BOB_ACCOUNT));
+
+        // First call succeeds and consumes nonce 0.
+        BOB_ACCOUNT.emergencyUninstallHook(emergencyUninstall, signature);
+
+        // Replay the exact same request.
+        vm.prank(address(BOB_ACCOUNT));
+        vm.expectRevert(IModuleManagerEventsAndErrors.InvalidNonce.selector);
+        BOB_ACCOUNT.emergencyUninstallHook(emergencyUninstall, signature);
     }
 
     function test_EmergencyUninstallHook_1271_DirectCall_Fail_WrongSigner() public {
